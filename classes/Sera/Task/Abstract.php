@@ -6,16 +6,46 @@
  */
 abstract class Sera_Task_Abstract implements Sera_Task
 {
+	const EVENT_CREATE='Create';
+	const EVENT_THAW='Thaw';
+
 	protected $_data;
 	protected $_signature=false;
+	protected $_observers = array();
 
 	/**
-	 * Constructs a task
+	 * Called by self::fromJson() or a static constructor in the concrete class.
 	 */
-	protected function __construct($data)
+	protected function __construct($data, $thaw = false)
 	{
 		$this->_data = $data;
+		$this->notifyObservers($thaw ? self::EVENT_THAW : self::EVENT_CREATE);
 	}
+
+	/**
+	 * Attach an observer that responds to notify
+	 */
+	public function attachObserver($observer)
+	{
+		$this->_observers []= $observer;
+	}
+
+	/**
+	 * Notify all attached observers with an event
+	 */
+	public function notifyObservers($event)
+	{
+		foreach ($this->_observers as $observer)
+			$observer->notify($event);
+
+		$callback = array($this, 'on'.$event);
+		if (is_callable($callback))
+			call_user_func($callback);
+	}
+
+	// template methods invoked on events
+	protected function onCreate() {}
+	protected function onThaw() {}
 
 	/**
 	 * Returns the version of the task
@@ -27,7 +57,7 @@ abstract class Sera_Task_Abstract implements Sera_Task
 
 	/**
 	 * Public access to the task data.
-	 * return array;
+	 * return array
 	 */
 	public function getData()
 	{
@@ -35,7 +65,17 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	}
 
 	/**
-	 * Serializes the task and it's data to json
+	 * Adds to the task data, overwriting items on key collision.
+	 * @param array
+	 */
+	public function addData($data)
+	{
+		$this->_data = array_merge($this->_data, $data);
+	}
+
+	/**
+	 * Serializes the task and it's data to json.
+	 * @return string JSON
 	 */
 	public function toJson()
 	{
@@ -56,7 +96,7 @@ abstract class Sera_Task_Abstract implements Sera_Task
 		$components = json_decode($json, true);
 		list($class, $version, $data) = $components;
 
-		$task = new $class($data);
+		$task = new $class($data, true);
 
 		// add the optional signature component
 		if(isset($components[3]))
