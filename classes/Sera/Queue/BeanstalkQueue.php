@@ -12,7 +12,9 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 		// TODO: support more than one server
 		list($host,$port) = explode(':', $servers[0]);
 
-		$this->_beanstalk = new Pheanstalk_Connection($host,$port);
+		$this->_beanstalk = new Sera_Queue_PheanstalkConnectionDecorator(
+			new Pheanstalk_Connection($host,$port)
+		);
 	}
 
 	/* (non-phpdoc)
