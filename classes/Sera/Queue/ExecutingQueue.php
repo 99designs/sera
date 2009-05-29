@@ -11,6 +11,7 @@ class Sera_Queue_ExecutingQueue implements Sera_Queue
 	 */
 	public function select($queueName)
 	{
+		return $this;
 	}
 
 	/* (non-phpdoc)
