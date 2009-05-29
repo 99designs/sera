@@ -8,7 +8,7 @@ abstract class Sera_Process
 	const SPAWN_CONTINUE=0;
 	const SPAWN_TERMINATE=10;
 
-	function __construct()
+	public function __construct()
 	{
 		// set up signal handling
 		declare(ticks = 1);
@@ -16,7 +16,7 @@ abstract class Sera_Process
 		pcntl_signal(SIGHUP, array($this,"signal"));
 	}
 
-	abstract function main();
+	abstract public function main();
 
 	/**
 	 * Called when a forked child process terminates
@@ -46,7 +46,7 @@ abstract class Sera_Process
 	/**
 	 * Runs the daemon
 	 */
-	final function run()
+	final public function run()
 	{
 		$this->onStart();
 		$this->main();
@@ -56,7 +56,7 @@ abstract class Sera_Process
 	 * Rather than simply running and exiting, the main function is called
 	 * until a child exits with a state of SPAWN_TERMINATE.
 	 */
-	function spawn()
+	public function spawn()
 	{
 		$this->onStart();
 
@@ -83,7 +83,7 @@ abstract class Sera_Process
 	/**
 	 * Forks the daemon and kills it's parent
 	 */
-	function daemonize()
+	public function daemonize()
 	{
 		// fork and kill parent
 		$pid = pcntl_fork();
@@ -93,7 +93,7 @@ abstract class Sera_Process
 	/**
 	 * Fork the process and return the PID
 	 */
-	function fork()
+	public function fork()
 	{
 		$pid = pcntl_fork();
 		if ($pid == -1)
@@ -107,7 +107,7 @@ abstract class Sera_Process
 	/**
 	 * Wait for any child processes
 	 */
-	function wait()
+	public function wait()
 	{
 		pcntl_wait($status);
 		return pcntl_wexitstatus($status);
@@ -116,7 +116,7 @@ abstract class Sera_Process
 	/**
 	 * Handle signals sent to process
 	 */
-	function signal($signo)
+	public function signal($signo)
 	{
 		if($signo == SIGTERM)
 		{
