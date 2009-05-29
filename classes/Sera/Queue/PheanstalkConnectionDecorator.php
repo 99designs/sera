@@ -25,15 +25,15 @@ class Sera_Queue_PheanstalkConnectionDecorator
 	{
 		try
 		{
-			return call_user_func_array($method, $parameters);
+			return call_user_func_array(array($this->_connection, $method), $parameters);
 		}
 		catch (Pheanstalk_Exception_ClientException $e)
 		{
-			throw new Sera_Queue_QueueException($e->getMessage(), $e->getCode(), $e);
+			throw new Sera_Queue_QueueException($e->getMessage(), $e->getCode());
 		}
 		catch (Pheanstalk_Exception_ServerException $e)
 		{
-			throw new Sera_Queue_QueueException($e->getMessage(), $e->getCode(), $e);
+			throw new Sera_Queue_QueueException($e->getMessage(), $e->getCode());
 		}
 	}
 }
