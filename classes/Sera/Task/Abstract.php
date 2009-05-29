@@ -106,7 +106,7 @@ abstract class Sera_Task_Abstract implements Sera_Task
 
 		if($task->getVersion() != $version)
 		{
-			throw new Sera_Task_Exception(sprintf(
+			throw new Sera_Task_TaskException(sprintf(
 				'Task version %d does not match current version %d',
 				$version,
 				$task->getVersion()
