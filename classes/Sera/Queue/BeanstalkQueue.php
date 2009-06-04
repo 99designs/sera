@@ -5,6 +5,17 @@
  */
 class Sera_Queue_BeanstalkQueue implements Sera_Queue
 {
+	/**
+	 * Released tasks are given a low priority to put them at
+	 * the back of the queue.
+	 */
+	const RELEASE_PRIORITY = 50;
+
+	/**
+	 * Released tasks are delayed to prevent thrashing.
+	 */
+	const RELEASE_DELAY = 5;
+
 	private $_beanstalk;
 
 	public function __construct($servers)
@@ -81,7 +92,11 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 			throw new Commerce_Exception("Failed to find linked beanstalk job");
 		}
 
-		$this->_beanstalk->release($task->beanstalkJob);
+		$this->_beanstalk->release(
+			$task->beanstalkJob,
+			self::RELEASE_PRIORITY,
+			self::RELEASE_DELAY);
+
 		return $this;
 	}
 }
