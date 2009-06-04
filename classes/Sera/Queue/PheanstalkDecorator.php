@@ -4,16 +4,16 @@
  * Decorates which rethrows Pheanstalk exceptions as Sera ones.
  * @author Paul Annesley <paul@99designs.com>
  */
-class Sera_Queue_PheanstalkConnectionDecorator
+class Sera_Queue_PheanstalkDecorator
 {
-	private $_connection;
+	private $_pheanstalk;
 
 	/**
-	 * @param Pheanstalk_Connection $connection
+	 * @param Pheanstalk $pheanstalk
 	 */
-	public function __construct($connection)
+	public function __construct($pheanstalk)
 	{
-		$this->_connection = $connection;
+		$this->_pheanstalk = $pheanstalk;
 	}
 
 	/**
@@ -25,7 +25,7 @@ class Sera_Queue_PheanstalkConnectionDecorator
 	{
 		try
 		{
-			return call_user_func_array(array($this->_connection, $method), $parameters);
+			return call_user_func_array(array($this->_pheanstalk, $method), $parameters);
 		}
 		catch (Pheanstalk_Exception_ClientException $e)
 		{
