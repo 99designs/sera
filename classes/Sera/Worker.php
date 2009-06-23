@@ -75,7 +75,6 @@ class Sera_Worker extends Sera_Process implements Ergo_ExceptionStrategy
 		}
 		catch(Exception $e)
 		{
-			// TODO: improve error handling to prevent thrashing
 			$queue->release($task);
 			throw $e;
 		}
@@ -87,9 +86,6 @@ class Sera_Worker extends Sera_Process implements Ergo_ExceptionStrategy
 	public function handleException($e)
 	{
 		Ergo::application()->errorHandler()->logException($e);
-
 		$this->logger->logException($e);
-		$this->logger->info("sleeping for 5 seconds after exception");
-		sleep(5);
 	}
 }
