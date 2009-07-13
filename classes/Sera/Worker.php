@@ -3,7 +3,7 @@
 /**
  * A worker that monitors a work queue
  */
-class Sera_Worker extends Sera_Process implements Ergo_ExceptionStrategy
+class Sera_Worker extends Sera_Process
 {
 	private $_executeTasks=true;
 	private $_queueFactory;
@@ -78,14 +78,5 @@ class Sera_Worker extends Sera_Process implements Ergo_ExceptionStrategy
 			$queue->release($task);
 			throw $e;
 		}
-	}
-
-	/**
-	 * Handle an uncaught exception
-	 */
-	public function handleException($e)
-	{
-		Ergo::application()->errorHandler()->logException($e);
-		$this->logger->logException($e);
 	}
 }
