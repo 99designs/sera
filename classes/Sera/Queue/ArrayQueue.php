@@ -78,11 +78,13 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	}
 
 	/**
-	 * Reset queue
+	 * Reset all internal queues.
+	 * @chainable
 	 */
 	public function reset()
 	{
 		$this->_selectedQueue = null;
 		$this->_queue = array();
+		return $this;
 	}
 }
