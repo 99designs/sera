@@ -35,13 +35,13 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	{
 		// beanstalk watches multiple queues, but submits to one
 		$this->_beanstalk->useTube($queueName);
-		$this->_beanstalk->watchTube($queueName);
+		$this->_beanstalk->watch($queueName);
 
 		// unwatch queues other than the selected
-		foreach($this->_beanstalk->getWatchedTubes() as $watched)
+		foreach($this->_beanstalk->listTubesWatched() as $watched)
 		{
 			if($queueName != $watched)
-				$this->_beanstalk->ignoreTube($watched);
+				$this->_beanstalk->ignore($watched);
 		}
 
 		return $this;
