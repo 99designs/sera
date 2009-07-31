@@ -14,7 +14,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/**
 	 * Released tasks are delayed to prevent thrashing.
 	 */
-	const RELEASE_DELAY = 5;
+	const RELEASE_DELAY = 10;
 
 	private $_beanstalk;
 
