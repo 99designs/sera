@@ -5,23 +5,14 @@
  */
 class Sera_Queue_BeanstalkQueue implements Sera_Queue
 {
-	/**
-	 * Released tasks are given a low priority to put them at
-	 * the back of the queue.
-	 */
-	const RELEASE_PRIORITY = 50;
-
-	/**
-	 * Released tasks are delayed to prevent thrashing.
-	 */
-	const RELEASE_DELAY = 10;
-
 	private $_beanstalk;
 
-	public function __construct($servers)
+	/**
+	 * Constructor
+	 */
+	public function __construct($server)
 	{
-		// TODO: support more than one server
-		list($host,$port) = explode(':', $servers[0]);
+		list($host,$port) = explode(':', $server[0]);
 
 		$this->_beanstalk = new Sera_Queue_PheanstalkDecorator(
 			new Pheanstalk($host,$port)
@@ -33,17 +24,26 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	 */
 	public function select($queueName)
 	{
-		// beanstalk watches multiple queues, but submits to one
 		$this->_beanstalk->useTube($queueName);
+		$this->listen($queueName);
+		return $this;
+	}
+
+	/* (non-phpdoc)
+	 * @see Queue::listen
+	 */
+	public function listen($queueName)
+	{
 		$this->_beanstalk->watch($queueName);
+		return $this;
+	}
 
-		// unwatch queues other than the selected
-		foreach($this->_beanstalk->listTubesWatched() as $watched)
-		{
-			if($queueName != $watched)
-				$this->_beanstalk->ignore($watched);
-		}
-
+	/* (non-phpdoc)
+	 * @see Queue::ignore
+	 */
+	public function ignore($queueName)
+	{
+		$this->_beanstalk->ignore($queueName);
 		return $this;
 	}
 
@@ -52,16 +52,16 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	 */
 	public function enqueue(Sera_Task $task)
 	{
-		$this->_beanstalk->put($task->toJson());
-
+		$this->_beanstalk->put($task->toJson(), $task->getPriority());
 		return $this;
 	}
 
 	/* (non-phpdoc)
 	 * @see Queue::dequeue
 	 */
-	public function dequeue()
+	public function dequeue($timeout=null)
 	{
+		// TODO: implement the timeout
 		$job = $this->_beanstalk->reserve();
 		$task = Sera_Task_Builder::fromJson($job->getData());
 		$task->beanstalkJob = $job;
@@ -85,7 +85,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::release
 	 */
-	public function release(Sera_Task $task)
+	public function release(Sera_Task $task, $delay=false)
 	{
 		if(!isset($task->beanstalkJob))
 		{
@@ -94,11 +94,46 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 
 		$this->_beanstalk->release(
 			$task->beanstalkJob,
-			self::RELEASE_PRIORITY,
-			self::RELEASE_DELAY);
+			$task->getPriority(),
+			$delay
+			);
 
 		return $this;
 	}
-}
 
-?>
+	/**
+	 * A beanstalk specific way of moving a task to a buried queue for manual execution
+	 */
+	public function bury(Sera_Task $task)
+	{
+		if(!isset($task->beanstalkJob))
+		{
+			throw new Commerce_Exception("Failed to find linked beanstalk job");
+		}
+
+		$this->_beanstalk->bury($task->beanstalkJob);
+		return $this;
+	}
+
+	/**
+	 * A beanstalk specific way of getting task stats
+	 */
+	public function taskStats(Sera_Task $task)
+	{
+		if(!isset($task->beanstalkJob))
+		{
+			throw new Commerce_Exception("Failed to find linked beanstalk job");
+		}
+
+		$stats = $this->_beanstalk->statsJob($task->beanstalkJob->getId());
+		return array_filter(array(
+			'id'=>$stats['id'],
+			'priority'=>$stats['pri'],
+			'age'=>$stats['age'],
+			'kicks'=>$stats['kicks'],
+			'buries'=>$stats['buries'],
+			'releases'=>$stats['releases'],
+			'timeouts'=>$stats['timeouts'],
+			));
+	}
+}

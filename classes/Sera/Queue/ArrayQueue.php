@@ -5,20 +5,35 @@
  */
 class Sera_Queue_ArrayQueue implements Sera_Queue
 {
-	private $_selectedQueue;
-	private $_queue=array();
+	private $_selected;
+	private $_listening=array();
+	private $_queues=array();
 
 	/* (non-phpdoc)
 	 * @see Queue::select
 	 */
 	public function select($queueName)
 	{
-		if(!isset($this->_queue[$queueName]))
-		{
-			$this->_queue[$queueName] = array();
-		}
+		$this->_selected = $queueName;
+		$this->listen($queueName);
+		return $this;
+	}
 
-		$this->_selectedQueue =& $this->_queue[$queueName];
+	/* (non-phpdoc)
+	 * @see Queue::listen
+	 */
+	public function listen($queueName)
+	{
+		$this->_listening[$queueName] = true;
+		return $this;
+	}
+
+	/* (non-phpdoc)
+	 * @see Queue::ignore
+	 */
+	public function ignore($queueName)
+	{
+		unset($this->_listening[$queueName]);
 		return $this;
 	}
 
@@ -27,23 +42,25 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	 */
 	public function enqueue(Sera_Task $task)
 	{
-		array_push(
-			$this->_selectedQueue,
-			$task->toJson()
-		);
+		$this->_queues[$this->_selected][] = $task;
+		return $this;
 	}
 
 	/* (non-phpdoc)
 	 * @see Queue::dequeue
 	 */
-	public function dequeue()
+	public function dequeue($timeout=false)
 	{
-		if (count($this->_selectedQueue) == 0)
-			return null;
+		foreach($this->_listening as $queueName=>$false)
+		{
+			if (isset($this->_queues[$queueName]) &&
+				count($this->_queues[$queueName]) != 0)
+			{
+				return array_shift($this->_queues[$queueName]);
+			}
+		}
 
-		return Sera_Task_Builder::fromJson(
-			array_shift($this->_selectedQueue)
-		);
+		return null;
 	}
 
 	/* (non-phpdoc)
@@ -51,7 +68,8 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	 */
 	public function delete(Sera_Task $task)
 	{
-		if(($idx = array_search($task->toJson(), $this->_selectedQueue)) !== false)
+		if(($idx = array_search($task->toJson(),
+			$this->_queues[$this->_selected])) !== false)
 		{
 			unset($this->_selectedQueue[$idx]);
 		}
@@ -60,7 +78,7 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::release
 	 */
-	public function release(Sera_Task $task)
+	public function release(Sera_Task $task, $delay=false)
 	{
 		$this->enqueue($task);
 	}
@@ -83,8 +101,9 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	 */
 	public function reset()
 	{
-		$this->_selectedQueue = null;
-		$this->_queue = array();
+		$this->_selected = null;
+		$this->_listening = array();
+		$this->_queues = array();
 		return $this;
 	}
 }

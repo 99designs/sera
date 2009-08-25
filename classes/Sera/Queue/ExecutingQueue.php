@@ -15,6 +15,22 @@ class Sera_Queue_ExecutingQueue implements Sera_Queue
 	}
 
 	/* (non-phpdoc)
+	 * @see Queue::listen
+	 */
+	public function listen($queueName)
+	{
+		return $this;
+	}
+
+	/* (non-phpdoc)
+	 * @see Queue::ignore
+	 */
+	public function ignore($queueName)
+	{
+		return $this;
+	}
+
+	/* (non-phpdoc)
 	 * @see Queue::enqueue
 	 */
 	public function enqueue(Sera_Task $task)
@@ -25,7 +41,7 @@ class Sera_Queue_ExecutingQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::dequeue
 	 */
-	public function dequeue()
+	public function dequeue($timeout=false)
 	{
 		throw new Sera_Queue_QueueException(__METHOD__ . ' not implemented');
 	}
@@ -41,7 +57,7 @@ class Sera_Queue_ExecutingQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::release
 	 */
-	public function release(Sera_Task $task)
+	public function release(Sera_Task $task, $delay=false)
 	{
 		throw new Sera_Queue_QueueException(__METHOD__ . ' not implemented');
 	}

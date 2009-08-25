@@ -17,6 +17,11 @@ interface Sera_Task
 	public function getVersion();
 
 	/**
+	 * Returns the priority of the task
+	 */
+	public function getPriority();
+
+	/**
 	 * Public access to the task data.
 	 * return array;
 	 */

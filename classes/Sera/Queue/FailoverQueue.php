@@ -1,20 +1,21 @@
 <?php
 
 /**
- *
+ * A queue that queues tasks onto other delegate queues on failure
  * @author Paul Annesley <paul@99designs.com>
  */
 class Sera_Queue_FailoverQueue implements Sera_Queue
 {
 	private $_delegates;
 	private $_selected;
+	private $_listening=array();
 
 	/**
-	 * @param Sera_Queue[]
+	 * @param Sera_Queue[] an array of queues to delegate failures to
 	 */
-	public function __construct($queues)
+	public function __construct($delegates)
 	{
-		$this->_delegates = $queues;
+		$this->_delegates = $delegates;
 	}
 
 	/* (non-phpdoc)
@@ -23,6 +24,25 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	public function select($queueName)
 	{
 		$this->_selected = $queueName;
+		$this->listen($queueName);
+		return $this;
+	}
+
+	/* (non-phpdoc)
+	 * @see Sera_Queue::select
+	 */
+	public function listen($queueName)
+	{
+		$this->_listening[$queueName] = true;
+		return $this;
+	}
+
+	/* (non-phpdoc)
+	 * @see Sera_Queue::select
+	 */
+	public function ignore($queueName)
+	{
+		unset($this->_listening[$queueName]);
 		return $this;
 	}
 
@@ -38,7 +58,7 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::dequeue
 	 */
-	public function dequeue()
+	public function dequeue($timeout=false)
 	{
 		$args = func_get_args();
 		return $this->_callDelegate(__FUNCTION__, $args);
@@ -56,7 +76,7 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::release
 	 */
-	public function release(Sera_Task $task)
+	public function release(Sera_Task $task, $delay=false)
 	{
 		$args = func_get_args();
 		return $this->_callDelegate(__FUNCTION__, $args);
@@ -90,8 +110,15 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 			try
 			{
 				// TODO: don't re-select if this delegate already selected
-				if (isset($this->_selected))
+				if(isset($this->_selected))
+				{
 					$queue->select($this->_selected);
+				}
+
+				if(!empty($this->_listening))
+				{
+					foreach($this->_listening as $key=>$false) $queue->listen($key);
+				}
 
 				$result = call_user_func_array(
 					array($queue, $method),

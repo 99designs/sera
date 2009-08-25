@@ -21,7 +21,7 @@ abstract class Sera_Process
 	/**
 	 * Called when a forked child process terminates
 	 */
-	protected function onChildTerminate() {}
+	protected function onChildTerminate($exitcode) {}
 
 	/**
 	 * Called when a process is forked
@@ -63,15 +63,18 @@ abstract class Sera_Process
 		while(true)
 		{
 			$pid = $this->fork();
+
+			// the parent
 			if($pid)
 			{
 				$exitCode = $this->wait();
-				$this->onChildTerminate();
+				$this->onChildTerminate($exitCode);
 				if($exitCode == self::SPAWN_TERMINATE)
 				{
 					exit($exitCode);
 				}
 			}
+			// the child
 			else
 			{
 				$this->onChildStart();
@@ -125,7 +128,7 @@ abstract class Sera_Process
 		}
 		elseif($signo == SIGHUP)
 		{
-			$lthis->onRestart();
+			$this->onRestart();
 		}
 	}
 }

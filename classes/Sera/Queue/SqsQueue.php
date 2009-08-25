@@ -29,6 +29,22 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	}
 
 	/* (non-phpdoc)
+	 * @see Commerce_Queue::listen
+	 */
+	public function listen($queueName)
+	{
+		throw new BadMethodCallException("Not implemented");
+	}
+
+	/* (non-phpdoc)
+	 * @see Commerce_Queue::ignore
+	 */
+	public function ignore($queueName)
+	{
+		throw new BadMethodCallException("Not implemented");
+	}
+
+	/* (non-phpdoc)
 	 * @see Commerce_Queue::enqueue
 	 */
 	public function enqueue(Sera_Task $task)

@@ -8,26 +8,56 @@ class QueueTest extends UnitTestCase
 	public function testAddingToAQueue()
 	{
 		$queue = new Sera_Queue_ArrayQueue();
-		$queue->select('myqueue');
+		$queue
+			->listen('myqueue1')
+			->listen('myqueue2')
+			;
 
-		// add a queuable to the queue
-		$queue->enqueue(Sera_Task_Null::create(array('mykey'=>'test1')));
-		$queue->enqueue(Sera_Task_Null::create(array('mykey'=>'test2')));
+		$queue
+			->select('myqueue1')
+			->enqueue(Sera_Task_Null::create(array('mykey'=>'test1')))
+			->select('myqueue2')
+			->enqueue(Sera_Task_Null::create(array('mykey'=>'test2')))
+			->select('myqueue3')
+			->enqueue(Sera_Task_Null::create(array('mykey'=>'test2')))
+			;
 
-		// get the first task from the queue
-		$task1 = $queue->dequeue();
+		$this->assertTaskData($queue->dequeue(), array('mykey'=>'test1'));
+		$this->assertTaskData($queue->dequeue(), array('mykey'=>'test2'));
+		$this->assertQueueEmpty($queue);
+	}
 
-		// check the job was extracted from the queue
-		$this->assertTrue(is_object($task1));
-		$this->assertEqual($task1->getData(), array('mykey'=>'test1'));
+	public function testIgnoringAQueue()
+	{
+		$queue = new Sera_Queue_ArrayQueue();
+		$queue
+			->listen('myqueue1')
+			->listen('myqueue2')
+			;
 
-		// get the first task from the queue
-		$task2 = $queue->dequeue();
+		$queue
+			->select('myqueue1')
+			->enqueue(Sera_Task_Null::create(array('mykey'=>'test1')))
+			->select('myqueue2')
+			->enqueue(Sera_Task_Null::create(array('mykey'=>'test2')))
+			->enqueue(Sera_Task_Null::create(array('mykey'=>'test3')))
+			;
 
-		// check the job was extracted from the queue
-		$this->assertTrue(is_object($task2));
-		$this->assertEqual($task2->getData(), array('mykey'=>'test2'));
+		$this->assertTaskData($queue->dequeue(), array('mykey'=>'test1'));
+		$this->assertTaskData($queue->dequeue(), array('mykey'=>'test2'));
 
+		$queue->ignore('myqueue2');
+		$this->assertQueueEmpty($queue);
+	}
+
+	public function assertTaskData($task, $data)
+	{
+		$this->assertTrue(is_object($task));
+		$this->assertEqual($task->getData(), $data);
+	}
+
+	public function assertQueueEmpty($queue)
+	{
 		$this->assertNull($queue->dequeue());
 	}
 }
