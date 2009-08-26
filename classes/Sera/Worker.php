@@ -6,7 +6,7 @@
 class Sera_Worker extends Sera_Process
 {
 	private $_queueFactory;
-	private $_queue;
+	private $_listen=array();
 
 	protected $logger;
 
@@ -25,29 +25,8 @@ class Sera_Worker extends Sera_Process
 	public function listen($queueName)
 	{
 		$this->logger->info("listening to %s queue", $queueName);
-		$this->queue()->listen($queueName);
+		$this->_listen[$queueName] = $queueName;
 		return $this;
-	}
-
-	/* (non-phpdoc)
-	 * @see Sera_Process::onStart()
-	 */
-	protected function onStart()
-	{
-		$this->logger->info("starting workers...");
-	}
-
-	/**
-	 * Gets the queue instance
-	 */
-	protected function queue()
-	{
-		if(!isset($this->_queue))
-		{
-			$this->_queue = $this->_queueFactory->create();
-		}
-
-		return $this->_queue;
 	}
 
 	/**
@@ -62,7 +41,7 @@ class Sera_Worker extends Sera_Process
 		$task->execute();
 		$queue->delete($task);
 
-		$this->logger->info("task executed in %0.2f seconds",microtime(true)-$startTime);
+		$this->logger->trace("task executed in %0.2f seconds",microtime(true)-$startTime);
 	}
 
 	/**
@@ -78,7 +57,10 @@ class Sera_Worker extends Sera_Process
 	 */
 	public function main()
 	{
-		$queue = $this->queue();
+		$queue = $this->_queueFactory->create();
+		foreach($this->_listen as $listen) $queue->listen($listen);
+
+		$this->logger->trace("waiting for tasks in child #%d...", getmypid());
 		$task = $this->dequeue($queue);
 
 		// use a custom error handler, chain to the existing loggers
@@ -89,5 +71,14 @@ class Sera_Worker extends Sera_Process
 
 		Ergo::application()->setErrorHandler($errorHandler);
 		$this->execute($task, $queue);
+	}
+
+	/* (non-phpdoc)
+	 * @see Sera_Process::spawn()
+	 */
+	public function spawn($parallel=1)
+	{
+		$this->logger->trace("spawning %d workers...", $parallel);
+		return parent::spawn($parallel);
 	}
 }

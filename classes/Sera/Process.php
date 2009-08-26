@@ -1,21 +1,16 @@
 <?php
 
 /**
- * A wrapper around the process control extension
+ * A wrapper around the process control extension for forking child processes
  */
 abstract class Sera_Process
 {
-	const SPAWN_CONTINUE=0;
-	const SPAWN_TERMINATE=10;
+	private $_parent=false;
+	private $_terminate=false;
 
-	public function __construct()
-	{
-		// set up signal handling
-		declare(ticks = 1);
-		pcntl_signal(SIGTERM, array($this,"signal"));
-		pcntl_signal(SIGHUP, array($this,"signal"));
-	}
-
+	/**
+	 * Template function, called in the child process
+	 */
 	abstract public function main();
 
 	/**
@@ -44,7 +39,7 @@ abstract class Sera_Process
 	protected function onRestart() {}
 
 	/**
-	 * Runs the daemon
+	 * Runs process once
 	 */
 	final public function run()
 	{
@@ -54,31 +49,46 @@ abstract class Sera_Process
 
 	/**
 	 * Rather than simply running and exiting, the main function is called
-	 * until a child exits with a state of SPAWN_TERMINATE.
+	 * @param $parallel int the number of parallel children to spawn
+	 * @return void
 	 */
-	public function spawn()
+	public function spawn($parallel=1)
 	{
+		$children = array();
+		$parent = getmypid();
 		$this->onStart();
 
-		while(true)
+		while(!$this->_terminate)
 		{
-			$pid = $this->fork();
-
-			// the parent
-			if($pid)
+			// fork a process if we can
+			if(count($children) < $parallel)
 			{
-				$exitCode = $this->wait();
-				$this->onChildTerminate($exitCode);
-				if($exitCode == self::SPAWN_TERMINATE)
+				$pid = pcntl_fork();
+				if ($pid == -1)
 				{
-					exit($exitCode);
+					throw new Sera_Exception('Failed to fork process');
+				}
+				else if($pid)
+				{
+					$children[$pid] = $pid;
+				}
+				else
+				{
+					$this->_parent = $parent;
+					$this->onChildStart();
+					exit($this->main());
 				}
 			}
-			// the child
-			else
+
+			if(count($children) >= $parallel)
 			{
-				$this->onChildStart();
-				exit($this->main());
+				// patiently wait for a child to die
+				pcntl_wait($status);
+				foreach($children as $child)
+				{
+					// only remove dead processes
+					if(!posix_kill($child, 0)) unset($children[$child]);
+				}
 			}
 		}
 	}
@@ -94,34 +104,11 @@ abstract class Sera_Process
 	}
 
 	/**
-	 * Fork the process and return the PID
-	 */
-	public function fork()
-	{
-		$pid = pcntl_fork();
-		if ($pid == -1)
-		{
-			throw new Exception("Failed to fork process");
-		}
-
-		return $pid;
-	}
-
-	/**
-	 * Wait for any child processes
-	 */
-	public function wait()
-	{
-		pcntl_wait($status);
-		return pcntl_wexitstatus($status);
-	}
-
-	/**
 	 * Handle signals sent to process
 	 */
 	public function signal($signo)
 	{
-		if($signo == SIGTERM)
+		if($signo == SIGINT)
 		{
 			$this->onTerminate();
 			exit(0);
@@ -130,5 +117,16 @@ abstract class Sera_Process
 		{
 			$this->onRestart();
 		}
+	}
+
+	/**
+	 * Registers a signal handler for the process
+	 */
+	public function catchSignals()
+	{
+		// set up signal handling
+		declare(ticks = 1);
+		pcntl_signal(SIGHUP, array($this,"signal"), false);
+		pcntl_signal(SIGINT, array($this,"signal"), false);
 	}
 }

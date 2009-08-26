@@ -19,24 +19,65 @@ class Sera_InteractiveWorker extends Sera_Worker
 	 */
 	public function onChildTerminate($exitcode)
 	{
-		$this->logger->info("child process terminated with exit code %d", $exitcode);
+		$this->logger->trace("child process terminated with exit code %d", $exitcode);
 	}
 
 	/* (non-phpdoc)
-	 * @see Sera_Process::main()
+	 * @see Sera_Worker::execute()
 	 */
-	public function main()
+	public function execute($task, $queue)
 	{
-		$this->logger->info("listening for a task...");
-		$queue = $this->queue();
-		$task = $this->dequeue($queue);
-		$operations = $this->_getTaskOperations($queue, $task);
 		$meta = $this->_getTaskMetadata($queue, $task);
 
+		// print out the task
 		printf("\n%s %s  %s\n", get_class($task),
 			$this->_formatJsonForConsole(json_encode($task->getData())),
 			$this->_formatJsonForConsole(json_encode($meta))
 			);
+
+		// execute the action chosen
+		switch(strtolower($this->_readCommand($queue, $task)))
+		{
+			case 'x':
+				parent::execute($task, $queue);
+				break;
+
+			case 'r':
+				$this->logger->info("releasing task %s", get_class($task));
+				$queue->release($task);
+				break;
+
+			case 'y':
+				$this->logger->info("delaying task %s for 10 seconds", get_class($task));
+				$queue->release($task, 10);
+				break;
+
+			case 'd':
+				$this->logger->info("deleting task %s", get_class($task));
+				$queue->delete($task);
+				break;
+
+			case 'b':
+				$this->logger->info("burying task %s", get_class($task));
+				$queue->bury($task);
+				break;
+
+			case 'q':
+				exit(Sera_Process::SPAWN_TERMINATE);
+				break;
+
+			default:
+				$this->logger->warn("not implemented command");
+				break;
+		}
+	}
+
+	/**
+	 * Reads a command from the user for a task from the console
+	 */
+	private function _readCommand($queue, $task)
+	{
+		$operations = $this->_getTaskOperations($queue, $task);
 
 		while(true)
 		{
@@ -49,43 +90,8 @@ class Sera_InteractiveWorker extends Sera_Worker
 			else
 			{
 				printf("\n");
-				break;
+				return $cmd;
 			}
-		}
-
-		switch(strtolower($cmd))
-		{
-			case 'x':
-				$this->execute($task, $queue);
-				break;
-
-			case 'r':
-				$this->logger->info("releasing task");
-				$queue->release($task);
-				break;
-
-			case 'y':
-				$this->logger->info("delaying task for 10 seconds");
-				$queue->release($task, 10);
-				break;
-
-			case 'd':
-				$this->logger->info("deleting task");
-				$queue->delete($task);
-				break;
-
-			case 'b':
-				$this->logger->info("burying task");
-				$queue->bury($task);
-				break;
-
-			case 'q':
-				exit(Sera_Process::SPAWN_TERMINATE);
-				break;
-
-			default:
-				$this->logger->warn("not implemented: %s", $cmd);
-				break;
 		}
 	}
 

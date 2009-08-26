@@ -18,8 +18,6 @@ class QueueTest extends UnitTestCase
 			->enqueue(Sera_Task_Null::create(array('mykey'=>'test1')))
 			->select('myqueue2')
 			->enqueue(Sera_Task_Null::create(array('mykey'=>'test2')))
-			->select('myqueue3')
-			->enqueue(Sera_Task_Null::create(array('mykey'=>'test2')))
 			;
 
 		$this->assertTaskData($queue->dequeue(), array('mykey'=>'test1'));
@@ -47,6 +45,21 @@ class QueueTest extends UnitTestCase
 		$this->assertTaskData($queue->dequeue(), array('mykey'=>'test2'));
 
 		$queue->ignore('myqueue2');
+		$this->assertQueueEmpty($queue);
+	}
+
+	public function testReleasingAndDeletingATask()
+	{
+		$queue = new Sera_Queue_ArrayQueue();
+		$queue->select('myqueue1');
+		$queue->enqueue(Sera_Task_Null::create(array('mykey'=>'test1')));
+
+		$task = $queue->dequeue();
+		$this->assertTaskData($task, array('mykey'=>'test1'));
+		$queue->release($task);
+		$task = $queue->dequeue();
+		$this->assertTaskData($task, array('mykey'=>'test1'));
+		$queue->delete($task);
 		$this->assertQueueEmpty($queue);
 	}
 
