@@ -16,7 +16,7 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	/**
 	 * Called by self::fromJson() or a static constructor in the concrete class.
 	 */
-	protected function __construct($data, $thaw=false)
+	protected function __construct($data, $thaw = false)
 	{
 		$this->_data = $data;
 		$this->notifyObservers($thaw ? self::EVENT_THAW : self::EVENT_CREATE);
@@ -56,14 +56,6 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	}
 
 	/**
-	 * Returns the priority of the task
-	 */
-	public function getPriority()
-	{
-		return Sera_Task_Priority::NORMAL;
-	}
-
-	/**
 	 * Public access to the task data.
 	 * return array
 	 */
@@ -87,10 +79,15 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	 */
 	public function toJson()
 	{
+		/*
+		 * Note that _data is not accessed directly here; instead, we give
+		 * subclasses an opportunity to add to the returned data in their
+		 * getData overrides. -- craiga 12th Aug 2009
+		 */
 		return json_encode(array(
 			get_class($this),
 			$this->getVersion(),
-			$this->_data,
+			$this->getData(),
 			$this->_signature
 		));
 	}
@@ -102,7 +99,7 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	public static function fromJson($json)
 	{
 		$components = json_decode($json, true);
-		list($class, $version, $data, $priority) = $components;
+		list($class, $version, $data) = $components;
 
 		$task = new $class($data, true);
 
