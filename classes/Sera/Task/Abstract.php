@@ -56,6 +56,14 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	}
 
 	/**
+	 * Returns the priority of the task
+	 */
+	public function getPriority()
+	{
+		return Sera_Task_Priority::NORMAL;
+	}
+
+	/**
 	 * Public access to the task data.
 	 * return array
 	 */
@@ -99,7 +107,7 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	public static function fromJson($json)
 	{
 		$components = json_decode($json, true);
-		list($class, $version, $data) = $components;
+		list($class, $version, $data, $priority) = $components;
 
 		$task = new $class($data, true);
 
