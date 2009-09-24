@@ -5,6 +5,9 @@
  */
 abstract class Sera_Process
 {
+	const SPAWN_CONTINUE=0;
+	const SPAWN_TERMINATE=10;
+
 	private $_parent=false;
 	private $_terminate=false;
 
@@ -84,9 +87,16 @@ abstract class Sera_Process
 			{
 				// patiently wait for a child to die
 				pcntl_wait($status);
+
+				// check the exit code
+				if(pcntl_wexitstatus($status) == self::SPAWN_TERMINATE)
+				{
+					exit(self::SPAWN_TERMINATE);
+				}
+
+				// remove dead child processes
 				foreach($children as $child)
 				{
-					// only remove dead processes
 					if(!posix_kill($child, 0)) unset($children[$child]);
 				}
 			}

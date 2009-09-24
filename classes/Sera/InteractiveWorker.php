@@ -5,6 +5,8 @@
  */
 class Sera_InteractiveWorker extends Sera_Worker
 {
+	const DELAY_TIME = 30;
+
 	/* (non-phpdoc)
 	 * @see Sera_Process::onStart()
 	 */
@@ -30,7 +32,7 @@ class Sera_InteractiveWorker extends Sera_Worker
 		$meta = $this->_getTaskMetadata($queue, $task);
 
 		// print out the task
-		printf("\n%s %s  %s\n", get_class($task),
+		printf("\n%s data => %s meta => %s\n", get_class($task),
 			$this->_formatJsonForConsole(json_encode($task->getData())),
 			$this->_formatJsonForConsole(json_encode($meta))
 			);
@@ -38,18 +40,14 @@ class Sera_InteractiveWorker extends Sera_Worker
 		// execute the action chosen
 		switch(strtolower($this->_readCommand($queue, $task)))
 		{
-			case 'x':
+			case '':
+			case 'y':
 				parent::execute($task, $queue);
 				break;
 
-			case 'r':
-				$this->logger->info("releasing task %s", get_class($task));
-				$queue->release($task);
-				break;
-
-			case 'y':
-				$this->logger->info("delaying task %s for 10 seconds", get_class($task));
-				$queue->release($task, 10);
+			case 'n':
+				$this->logger->info("releasing task %s for %d seconds", get_class($task), self::DELAY_TIME);
+				$queue->release($task, self::DELAY_TIME);
 				break;
 
 			case 'd':
@@ -81,9 +79,10 @@ class Sera_InteractiveWorker extends Sera_Worker
 
 		while(true)
 		{
-			$cmd = readline(sprintf("Action? %s : ", implode(' ', $operations)));
+			$prompt = 'Execute ('.implode(', ', $operations).')? ';
+			$cmd = readline($prompt);
 
-			if(!in_array(strtolower($cmd), array_keys($operations)))
+			if($cmd && !in_array(strtolower($cmd), array_keys($operations)))
 			{
 				printf("Unknown action\n\n");
 			}
@@ -102,17 +101,16 @@ class Sera_InteractiveWorker extends Sera_Worker
 	{
 		// determine operations available
 		$operations = array(
-			'x'=>'e[x]ecute',
-			'r'=>'[r]elease',
-			'y'=>'dela[y]',
-			'd'=>'[d]elete',
-			'q'=>'[q]uit'
+			'y'=>'y = yes [default]',
+			'n'=>'n = no',
+			'd'=>'d = delete',
+			'q'=>'q = quit'
 			);
 
 		// add some queue specific actions
 		if(method_exists($queue,'bury'))
 		{
-			$operations['b'] = '[b]ury';
+			$operations['b'] = 'b = bury';
 		}
 
 		return $operations;
