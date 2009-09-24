@@ -22,6 +22,24 @@ class Sera_Queue_Decorator implements Sera_Queue
 	}
 
 	/* (non-phpdoc)
+	 * @see Sera_Queue::select
+	 */
+	public function listen($queueName)
+	{
+		$this->_delegate->listen($queueName);
+		return $this;
+	}
+
+	/* (non-phpdoc)
+	 * @see Sera_Queue::select
+	 */
+	public function ignore($queueName)
+	{
+		$this->_delegate->ignore($queueName);
+		return $this;
+	}
+
+	/* (non-phpdoc)
 	 * @see Sera_Queue::enqueue
 	 */
 	public function enqueue(Sera_Task $task)
@@ -33,9 +51,9 @@ class Sera_Queue_Decorator implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::dequeue
 	 */
-	public function dequeue()
+	public function dequeue($timeout=false)
 	{
-		return $this->_delegate->dequeue();
+		return $this->_delegate->dequeue($timeout);
 	}
 
 	/* (non-phpdoc)
@@ -50,9 +68,9 @@ class Sera_Queue_Decorator implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::release
 	 */
-	public function release(Sera_Task $task)
+	public function release(Sera_Task $task, $delay=false)
 	{
-		$this->_delegate->release($task);
+		$this->_delegate->release($task, $delay);
 		return $this;
 	}
 

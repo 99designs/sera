@@ -5,12 +5,18 @@
  */
 class Sera_Queue_SqsQueue implements Sera_Queue
 {
-	private $_sqs;
+	private $_selected;
+	private $_listening=array();
+	private $_queues=array();
+
+	private $_messages=array();
 	private $_accessKey;
 	private $_secretKey;
 	private $_pollRate;
-	private $_messages=array();
 
+	/**
+	 * Constructor
+	 */
 	public function __construct($accessKey, $secretKey, $pollRate=1)
 	{
 		$this->_sqs = false;
@@ -24,7 +30,8 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function select($queueName)
 	{
-		$this->_sqs = new Sera_Sqs_Client($this->_accessKey, $this->_secretKey, $queueName);
+		$this->_selected = new Sera_Sqs_Client($this->_accessKey, $this->_secretKey, $queueName);
+		$this->listen($queueName);
 		return $this;
 	}
 
@@ -33,7 +40,8 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function listen($queueName)
 	{
-		throw new BadMethodCallException("Not implemented");
+		$this->_listening[$queueName] = new Sera_Sqs_Client($this->_accessKey, $this->_secretKey, $queueName);
+		return $this;
 	}
 
 	/* (non-phpdoc)
@@ -41,7 +49,8 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function ignore($queueName)
 	{
-		throw new BadMethodCallException("Not implemented");
+		unset($this->_listening[$queueName]);
+		return $this;
 	}
 
 	/* (non-phpdoc)
@@ -49,31 +58,45 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function enqueue(Sera_Task $task)
 	{
-		$this->_sqs->SendMessage(urlencode($task->toJson()));
+		$this->_selected->SendMessage(urlencode($task->toJson()));
 	}
 
 	/* (non-phpdoc)
 	 * @see Commerce_Queue::dequeue
 	 */
-	public function dequeue()
+	public function dequeue($timeout=false)
 	{
+		if($timeout !== false)
+		{
+			throw new InvalidArgumentException("Timeout not implemented");
+		}
+
 		while(1)
 		{
 			// grab as many messages as we can get
-			foreach($this->_sqs->ReceiveMessage() as $message)
+			if(!count($this->_messages))
 			{
-				array_push($this->_messages,$message);
+				foreach($this->_listening as $queue)
+				{
+					foreach($queue->ReceiveMessage() as $message)
+					{
+						$this->_messages[$queue->queueName][] = $message;
+					}
+				}
 			}
 
 			// return just the first one
-			if(count($this->_messages))
+			foreach($this->_messages as $queueName=>$messages)
 			{
-				$message = array_shift($this->_messages);
-				$task = Sera_Task_Builder::fromJson(urldecode($message->Body));
-				$task->messageId = $message->MessageId;
-				$task->receiptHandle = $message->ReceiptHandle;
+				foreach($messages as $message)
+				{
+					$task = Sera_Task_Builder::fromJson(urldecode($message->Body));
+					$task->messageId = $message->MessageId;
+					$task->receiptHandle = $message->ReceiptHandle;
+					$task->queueName = $queueName;
 
-				return $task;
+					return $task;
+				}
 			}
 
 			//Ergo::loggerFor($this)->trace("No tasks yet, sleeping for $this->_pollRate second");
@@ -86,15 +109,20 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function delete(Sera_Task $task)
 	{
-		$this->_sqs->DeleteMessage($task->receiptHandle);
+		$this->_listening[$task->queueName]->DeleteMessage($task->receiptHandle);
 		return $this;
 	}
 
 	/* (non-phpdoc)
 	 * @see Commerce_Queue::release
 	 */
-	public function release(Sera_Task $task)
+	public function release(Sera_Task $task, $delay=false)
 	{
+		if($delay !== false)
+		{
+			throw new InvalidArgumentException("Delay not implemented");
+		}
+
 		// do nothing, stuff gets released anyway.
 		return $this;
 	}

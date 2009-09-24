@@ -20,10 +20,10 @@ class Sera_Sqs_Client {
 
 	const ENDPOINT = 'http://queue.amazonaws.com';
 
+	public $queueName;
 	private $accessKey;
 	private $secretKey;
 	private $endpoint;
-	private $queueName;
 	private $activeQueueURL;
 	private $fetchFunction;
 
@@ -41,6 +41,7 @@ class Sera_Sqs_Client {
 	public function __construct($accessKey, $secretKey, $queueName = '', $endpoint = self::ENDPOINT)
 	{
 		// Save properties
+		$this->queueName = $queueName;
 		$this->accessKey = $accessKey;
 		$this->secretKey = $secretKey;
 		$this->endpoint = $endpoint;
