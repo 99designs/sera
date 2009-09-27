@@ -126,4 +126,19 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 		// do nothing, stuff gets released anyway.
 		return $this;
 	}
+
+	/**
+	 * Return some stats about the queue
+	 */
+	public function stats()
+	{
+		$stats = array('ready'=>0);
+
+		foreach($this->_listening as $queue)
+		{
+			$stats['ready'] += $queue->GetQueueAttributes('ApproximateNumberOfMessages');
+		}
+
+		return $stats;
+	}
 }
