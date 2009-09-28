@@ -31,7 +31,14 @@ class Sera_Task_ErrorHandler extends Ergo_Error_ConsoleErrorHandler
 					self::RELEASE_DELAY
 					);
 
-			$this->_queue->release($this->_task, self::RELEASE_DELAY);
+			try
+			{
+				$this->_queue->release($this->_task, self::RELEASE_DELAY);
+			}
+			catch(Exception $re)
+			{
+				$this->logger()->logException($re);
+			}
 		}
 
 		parent::handle($e);
