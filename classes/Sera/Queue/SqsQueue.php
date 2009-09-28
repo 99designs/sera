@@ -118,11 +118,6 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function release(Sera_Task $task, $delay=false)
 	{
-		if($delay !== false)
-		{
-			throw new InvalidArgumentException("Delay not implemented");
-		}
-
 		// do nothing, stuff gets released anyway.
 		return $this;
 	}
