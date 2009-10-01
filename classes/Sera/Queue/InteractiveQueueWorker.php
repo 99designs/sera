@@ -3,32 +3,16 @@
 /**
  * A worker that prompts the user what action to take
  */
-class Sera_InteractiveWorker extends Sera_Worker
+class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 {
 	const DELAY_TIME = 30;
 
 	/* (non-phpdoc)
-	 * @see Sera_Process::onStart()
+	 * @see Sera_Queue_QueueWorker::executeTask()
 	 */
-	protected function onStart()
+	protected function executeTask($task, $queue)
 	{
-		$this->logger->info("running in interactive mode");
-		$this->logger->info("starting workers");
-	}
-
-	/* (non-phpdoc)
-	 * @see Sera_Process::main()
-	 */
-	public function onChildTerminate($exitcode)
-	{
-		$this->logger->trace("child process terminated with exit code %d", $exitcode);
-	}
-
-	/* (non-phpdoc)
-	 * @see Sera_Worker::execute()
-	 */
-	public function execute($task, $queue)
-	{
+		$logger = Ergo::loggerFor($this);
 		$meta = $this->_getTaskMetadata($queue, $task);
 
 		// print out the task
@@ -42,21 +26,21 @@ class Sera_InteractiveWorker extends Sera_Worker
 		{
 			case '':
 			case 'y':
-				parent::execute($task, $queue);
+				parent::executeTask($task, $queue);
 				break;
 
 			case 'n':
-				$this->logger->info("releasing task %s for %d seconds", get_class($task), self::DELAY_TIME);
+				$logger->info("releasing task %s for %d seconds", get_class($task), self::DELAY_TIME);
 				$queue->release($task, self::DELAY_TIME);
 				break;
 
 			case 'd':
-				$this->logger->info("deleting task %s", get_class($task));
+				$logger->info("deleting task %s", get_class($task));
 				$queue->delete($task);
 				break;
 
 			case 'b':
-				$this->logger->info("burying task %s", get_class($task));
+				$logger->info("burying task %s", get_class($task));
 				$queue->bury($task);
 				break;
 
@@ -65,7 +49,7 @@ class Sera_InteractiveWorker extends Sera_Worker
 				break;
 
 			default:
-				$this->logger->warn("not implemented command");
+				$logger->warn("not implemented command");
 				break;
 		}
 	}

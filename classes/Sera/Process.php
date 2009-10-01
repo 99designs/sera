@@ -10,6 +10,7 @@ abstract class Sera_Process
 
 	private $_parent=false;
 	private $_terminate=false;
+	private $_daemon=false;
 
 	/**
 	 * Template function, called in the child process
@@ -17,54 +18,51 @@ abstract class Sera_Process
 	abstract public function main();
 
 	/**
-	 * Called when a forked child process terminates
-	 */
-	protected function onChildTerminate($exitcode) {}
-
-	/**
 	 * Called when a process is forked
 	 */
-	protected function onChildStart() {}
+	protected function onFork($pid) {}
 
 	/**
-	 * Called when the daemon starts processing
+	 * Called when the process starts
 	 */
 	protected function onStart() {}
 
 	/**
-	 * Called when a SIGTERM is received
+	 * Called when the process terminates
 	 */
-	protected function onTerminate() {}
-
-	/**
-	 * Called when a SIGHUP is received
-	 */
-	protected function onRestart() {}
+	protected function onTerminate($exitCode) {}
 
 	/**
 	 * Runs process once
 	 */
-	final public function run()
+	public function run()
 	{
 		$this->onStart();
-		$this->main();
+		$code = $this->main();
+		$this->onTerminate($code);
+		exit($code);
 	}
 
 	/**
-	 * Rather than simply running and exiting, the main function is called
-	 * @param $parallel int the number of parallel children to spawn
+	 * Rather than simply running and exiting, the main function is called continually
+	 * until it returns Sera_Process::SPAWN_TERMINATE.
+	 * @param $count int the number of processes to spawn
 	 * @return void
 	 */
-	public function spawn($parallel=1)
+	public function spawn($count=1)
 	{
+		// needed for signal handling
+		declare(ticks = 1);
+		$this->catchSignals();
+
 		$children = array();
 		$parent = getmypid();
 		$this->onStart();
 
-		while(!$this->_terminate)
+		while(!$this->_terminate || count($children))
 		{
 			// fork a process if we can
-			if(count($children) < $parallel)
+			if(!$this->_terminate && count($children) < $count)
 			{
 				$pid = pcntl_fork();
 				if ($pid == -1)
@@ -78,20 +76,23 @@ abstract class Sera_Process
 				else
 				{
 					$this->_parent = $parent;
-					$this->onChildStart();
-					exit($this->main());
+					$this->onFork(getmypid());
+					$code = $this->main();
+					$this->onTerminate($code);
+					exit($code);
 				}
 			}
 
-			if(count($children) >= $parallel)
+			// wait for a child to die
+			if($this->_terminate || count($children) >= $count)
 			{
 				// patiently wait for a child to die
-				pcntl_wait($status);
+				pcntl_waitpid(0, $status);
 
 				// check the exit code
 				if(pcntl_wexitstatus($status) == self::SPAWN_TERMINATE)
 				{
-					exit(self::SPAWN_TERMINATE);
+					$this->_terminate = true;
 				}
 
 				// remove dead child processes
@@ -101,6 +102,8 @@ abstract class Sera_Process
 				}
 			}
 		}
+
+		$this->onTerminate(0);
 	}
 
 	/**
@@ -108,35 +111,50 @@ abstract class Sera_Process
 	 */
 	public function daemonize()
 	{
+		$this->_daemon = true;
+
 		// fork and kill parent
-		$pid = pcntl_fork();
-		if($pid > 0) exit();
+		if(pcntl_fork() > 0) exit();
 	}
 
 	/**
 	 * Handle signals sent to process
 	 */
-	public function signal($signo)
+	protected function signal($signo)
 	{
-		if($signo == SIGINT)
+		if($this->isSignalTerminate($signo))
 		{
-			$this->onTerminate();
-			exit(0);
-		}
-		elseif($signo == SIGHUP)
-		{
-			$this->onRestart();
+			$this->_terminate = true;
 		}
 	}
 
 	/**
 	 * Registers a signal handler for the process
 	 */
-	public function catchSignals()
+	protected function catchSignals()
 	{
 		// set up signal handling
-		declare(ticks = 1);
 		pcntl_signal(SIGHUP, array($this,"signal"), false);
 		pcntl_signal(SIGINT, array($this,"signal"), false);
+		pcntl_signal(SIGQUIT, array($this,"signal"), false);
+		pcntl_signal(SIGTERM, array($this,"signal"), false);
+	}
+
+	/**
+	 * Returns the parent process or false if it's the parent
+	 * @return int
+	 */
+	protected function getParentPid()
+	{
+		return $this->_parent;
+	}
+
+	/**
+	 * Determines if a signal should cause the process to terminate
+	 */
+	protected function isSignalTerminate($signo)
+	{
+		return ($signo == SIGHUP && !$this->_daemon) ||
+			in_array($signo,array(SIGINT,SIGQUIT,SIGTERM));
 	}
 }
