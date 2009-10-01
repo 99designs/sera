@@ -52,7 +52,13 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	 */
 	public function enqueue(Sera_Task $task)
 	{
-		$this->_beanstalk->put($task->toJson(), $task->getPriority());
+		$this->_beanstalk->put(
+			$task->toJson(),
+			$task->getPriority(),
+			0,
+			$task->getTimeToRelease()
+			);
+
 		return $this;
 	}
 

@@ -201,6 +201,31 @@ class Sera_Sqs_Client {
 	}
 
 	/**
+	 * Changes a messages visiblity
+	 *
+	 * @author Lachlan Donald <lachlan@99designs.com>
+	 * @param string	$ReceiptHandle
+	 * @param int	$VisibilityTimeout
+	 * @return SimpleXMLElement		ResponseMetadata->RequestId->Value
+	 */
+	public function ChangeMessageVisibility($ReceiptHandle, $VisibilityTimeout)
+	{
+		$params = array();
+		$params['ReceiptHandle'] = $ReceiptHandle;
+		$params['VisibilityTimeout'] = $VisibilityTimeout;
+		$result = $this->makeRequest('ChangeMessageVisibility', $params);
+
+		if ($result->ResponseMetadata->RequestId != NULL)
+		{
+			return $result->ResponseMetadata->RequestId->Value;
+		}
+		else
+		{
+			throw( new Exception($result->Error->Code) );
+		}
+	}
+
+	/**
 	 * Get a message(s) from your queue
 	 *
 	 * @author Justin@AWS <http://developer.amazonwebservices.com/connect/profile.jspa?userID=28471>
@@ -265,7 +290,7 @@ class Sera_Sqs_Client {
 			// Add Actions
 			$params['Action'] = $action;
 			$params['Expires'] = gmdate('Y-m-d\TH:i:s\Z', $timestamp + 10);
-			$params['Version'] = '2008-01-01';
+			$params['Version'] = '2009-02-01'; //'2008-01-01';
 			$params['AWSAccessKeyId'] = $this->accessKey;
 			$params['SignatureVersion'] = '1';
 

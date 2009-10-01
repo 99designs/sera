@@ -71,35 +71,37 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 			throw new InvalidArgumentException("Timeout not implemented");
 		}
 
-		while(1)
+		while(true)
 		{
-			// grab as many messages as we can get
-			if(!count($this->_messages))
+			$queues = $this->_listening;
+
+			foreach($queues as $queue)
 			{
-				foreach($this->_listening as $queue)
+				foreach($queue->ReceiveMessage() as $message)
 				{
-					foreach($queue->ReceiveMessage() as $message)
+					$this->_messages[$queue->queueName][] = $message;
+				}
+
+				// return just the first available message
+				foreach($this->_messages as $queueName=>$messages)
+				{
+					foreach($messages as $message)
 					{
-						$this->_messages[$queue->queueName][] = $message;
+						$task = Sera_Task_Builder::fromJson(urldecode($message->Body));
+						$task->messageId = $message->MessageId;
+						$task->receiptHandle = $message->ReceiptHandle;
+						$task->queueName = $queueName;
+
+						// change the SQS release delay
+						$queue->ChangeMessageVisibility($message->ReceiptHandle, $task->getTimeToRelease());
+
+						return $task;
 					}
 				}
 			}
 
-			// return just the first one
-			foreach($this->_messages as $queueName=>$messages)
-			{
-				foreach($messages as $message)
-				{
-					$task = Sera_Task_Builder::fromJson(urldecode($message->Body));
-					$task->messageId = $message->MessageId;
-					$task->receiptHandle = $message->ReceiptHandle;
-					$task->queueName = $queueName;
-
-					return $task;
-				}
-			}
-
-			//Ergo::loggerFor($this)->trace("No tasks yet, sleeping for $this->_pollRate second");
+			// shuffling queues ensures no queue receives better treatment
+			shuffle($queues);
 			sleep($this->_pollRate);
 		}
 	}
@@ -118,7 +120,10 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function release(Sera_Task $task, $delay=false)
 	{
-		// do nothing, stuff gets released anyway.
+		// change the SQS release delay, this isn't exactly a delay..
+		$this->_listening[$task->queueName]->ChangeMessageVisibility(
+			$task->receiptHandle, (int) $delay);
+
 		return $this;
 	}
 

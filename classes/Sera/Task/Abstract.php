@@ -64,6 +64,15 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	}
 
 	/**
+	 * Returns the number of second before a task is released
+	 * @return int
+	 */
+	public function getTimeToRelease()
+	{
+		return 30; // 30 seconds
+	}
+
+	/**
 	 * Public access to the task data.
 	 * return array
 	 */

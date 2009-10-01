@@ -71,14 +71,17 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	 */
 	public function handle($e)
 	{
-		$this->logger()->error(
-			"worker terminated with an uncaught error, releasing task for %d seconds",
-				self::RELEASE_DELAY
-				);
-
 		try
 		{
-			$this->_queue->release($this->_lastTask, self::RELEASE_DELAY);
+			if($this->_lastTask)
+			{
+				$this->logger()->error(
+					"worker terminated with an uncaught error, releasing task for %d seconds",
+						self::RELEASE_DELAY
+						);
+
+				$this->_queue->release($this->_lastTask, self::RELEASE_DELAY);
+			}
 		}
 		catch(Exception $re)
 		{
