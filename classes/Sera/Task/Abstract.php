@@ -118,6 +118,9 @@ abstract class Sera_Task_Abstract implements Sera_Task
 		$components = json_decode($json, true);
 		list($class, $version, $data, $priority) = $components;
 
+		if (!class_exists($class))
+			throw new Sera_Task_TaskException("Task class '$class' does not exist");
+
 		$task = new $class($data, true);
 
 		// add the optional signature component
