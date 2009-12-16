@@ -45,7 +45,7 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 				break;
 
 			case 'q':
-				exit(Sera_Process::SPAWN_TERMINATE);
+				exit(Sera_WorkerFarm::SPAWN_TERMINATE);
 				break;
 
 			default:

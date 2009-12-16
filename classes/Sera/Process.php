@@ -5,10 +5,6 @@
  */
 abstract class Sera_Process
 {
-	const SPAWN_CONTINUE=0;
-	const SPAWN_TERMINATE=10;
-
-	private $_parent=false;
 	private $_terminate=false;
 	private $_daemon=false;
 
@@ -44,69 +40,6 @@ abstract class Sera_Process
 	}
 
 	/**
-	 * Rather than simply running and exiting, the main function is called continually
-	 * until it returns Sera_Process::SPAWN_TERMINATE.
-	 * @param $count int the number of processes to spawn
-	 * @return void
-	 */
-	public function spawn($count=1)
-	{
-		// needed for signal handling
-		declare(ticks = 1);
-		$this->catchSignals();
-
-		$children = array();
-		$parent = getmypid();
-		$this->onStart();
-
-		while(!$this->_terminate || count($children))
-		{
-			// fork a process if we can
-			if(!$this->_terminate && count($children) < $count)
-			{
-				$pid = pcntl_fork();
-				if ($pid == -1)
-				{
-					throw new Sera_Exception('Failed to fork process');
-				}
-				else if($pid)
-				{
-					$children[$pid] = $pid;
-				}
-				else
-				{
-					$this->_parent = $parent;
-					$this->onFork(getmypid());
-					$code = $this->main();
-					$this->onTerminate($code);
-					exit($code);
-				}
-			}
-
-			// wait for a child to die
-			if($this->_terminate || count($children) >= $count)
-			{
-				// patiently wait for a child to die
-				pcntl_waitpid(0, $status);
-
-				// check the exit code
-				if(pcntl_wexitstatus($status) == self::SPAWN_TERMINATE)
-				{
-					$this->_terminate = true;
-				}
-
-				// remove dead child processes
-				foreach($children as $child)
-				{
-					if(!posix_kill($child, 0)) unset($children[$child]);
-				}
-			}
-		}
-
-		$this->onTerminate(0);
-	}
-
-	/**
 	 * Forks the daemon and kills it's parent
 	 */
 	public function daemonize()
@@ -125,6 +58,7 @@ abstract class Sera_Process
 		if($this->isSignalTerminate($signo))
 		{
 			$this->_terminate = true;
+			$this->uncatchSignals();
 		}
 	}
 
@@ -141,12 +75,14 @@ abstract class Sera_Process
 	}
 
 	/**
-	 * Returns the parent process or false if it's the parent
-	 * @return int
+	 * Unregisters signal handers for the process
 	 */
-	protected function getParentPid()
+	protected function uncatchSignals()
 	{
-		return $this->_parent;
+		pcntl_signal(SIGHUP, SIG_DFL);
+		pcntl_signal(SIGINT, SIG_DFL);
+		pcntl_signal(SIGQUIT, SIG_DFL);
+		pcntl_signal(SIGTERM, SIG_DFL);
 	}
 
 	/**

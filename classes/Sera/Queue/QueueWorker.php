@@ -54,7 +54,7 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 		$task->execute();
 		$queue->delete($task);
 
-		$this->logger->trace("task executed in %0.2f seconds",microtime(true)-$startTime);
+		$this->logger->info("task executed in %0.2f seconds",microtime(true)-$startTime);
 	}
 
 
