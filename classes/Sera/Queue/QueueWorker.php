@@ -15,11 +15,20 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 
 	/**
 	 * Constructor
+	 * @param $queue object either queue instance or an Ergo_Factory
 	 */
-	function __construct(Ergo_Factory $queueFactory)
+	function __construct($queue)
 	{
 		$this->logger = Ergo::loggerFor($this);
-		$this->_queueFactory = $queueFactory;
+
+		if($queue instanceof Ergo_Factory)
+		{
+			$this->_queueFactory = $queue;
+		}
+		else
+		{
+			$this->_queue = $queue;
+		}
 	}
 
 	/**
@@ -29,6 +38,7 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	{
 		$this->logger->info("listening to %s queue", $queueName);
 		$this->_listen[$queueName] = $queueName;
+		if(isset($this->_queue)) $this->_queue->listen($queueName);
 		return $this;
 	}
 
@@ -53,8 +63,11 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	 */
 	public function execute()
 	{
-		$this->_queue = $this->_queueFactory->create();
-		foreach($this->_listen as $listen) $this->_queue->listen($listen);
+		if(!isset($this->_queue))
+		{
+			$this->_queue = $this->_queueFactory->create();
+			foreach($this->_listen as $listen) $this->_queue->listen($listen);
+		}
 
 		$this->logger->trace("waiting for tasks in child #%d...", getmypid());
 		$this->_lastTask = $this->_queue->dequeue();
