@@ -93,4 +93,18 @@ abstract class Sera_Process
 		return ($signo == SIGHUP && !$this->_daemon) ||
 			in_array($signo,array(SIGINT,SIGQUIT,SIGTERM));
 	}
+
+	/**
+	 *
+	 */
+	protected function fork()
+	{
+		$pid = pcntl_fork();
+		if ($pid == -1)
+		{
+			throw new Sera_Exception('Failed to fork process');
+		}
+
+		return $pid;
+	}
 }

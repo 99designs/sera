@@ -17,7 +17,7 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	 * Constructor
 	 * @param $queue object either queue instance or an Ergo_Factory
 	 */
-	function __construct($queue)
+	function __construct($queue, $queueName=null)
 	{
 		$this->logger = Ergo::loggerFor($this);
 
@@ -29,6 +29,11 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 		{
 			$this->_queue = $queue;
 		}
+
+		if(!is_null($queueName))
+		{
+			$this->listen($queueName);
+		}
 	}
 
 	/**
@@ -36,7 +41,6 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	 */
 	public function listen($queueName)
 	{
-		$this->logger->info("listening to %s queue", $queueName);
 		$this->_listen[$queueName] = $queueName;
 		if(isset($this->_queue)) $this->_queue->listen($queueName);
 		return $this;
@@ -69,7 +73,9 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 			foreach($this->_listen as $listen) $this->_queue->listen($listen);
 		}
 
-		$this->logger->trace("waiting for tasks in child #%d...", getmypid());
+		$this->logger->trace("waiting for tasks in child #%d (worker %d) [%s]...",
+			getmypid(), $this->_spawn_id, implode(',', $this->_listen));
+
 		$this->_lastTask = $this->_queue->dequeue();
 
 		$this->setInteruptable(false);

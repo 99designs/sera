@@ -13,8 +13,8 @@ class Sera_WorkerFarm extends Sera_Process
 	private $_terminate=false;
 	private $_parent=false;
 	private $_logger;
-	private $_worker;
 	private $_workers=array();
+	private $_worker;
 
 	/**
 	 * Constructor
@@ -34,13 +34,9 @@ class Sera_WorkerFarm extends Sera_Process
 	public function addWorker($worker, $processes=1)
 	{
 		$worker->_spawn_id = count($this->_workers)+1;
-		$worker->_spawn_processes = array();
-		$worker->_spawn_config = array(
-			'processes'=>$processes
-			);
-
+		$worker->_spawn_config = array('processes'=>$processes);
 		$this->_processMax += $processes;
-		$this->_workers[] = $worker;
+		$this->_workers[$worker->_spawn_id] = $worker;
 		return $this;
 	}
 
@@ -54,27 +50,92 @@ class Sera_WorkerFarm extends Sera_Process
 		return $this;
 	}
 
+	/**
+	 * Gets the process limit
+	 */
+	public function getProcessLimit()
+	{
+		return $this->_processLimit
+			? min($this->_processMax, $this->_processLimit)
+			: $this->_processMax
+			;
+	}
+
 	/* (non-phpdoc)
 	 * @see Sera_Process::main()
 	 */
 	public function main()
 	{
+		$this->spawn();
+	}
+
+	/**
+	 * Spawns another worker, based on which need more.
+	 * @return void
+	 */
+	private function _spawnWorker(&$children)
+	{
+		$count = array_count_values($children);
+		$parent = getmypid();
+		$candidates = array();
+
+		// find a list of candidate workers
+		foreach($this->_workers as $id=>$worker)
+		{
+			if(!isset($count[$id]) || $count[$id] < $worker->_spawn_config['processes'])
+			{
+				$candidates[] = $worker;
+			}
+		}
+
+		// shuffle the candidates, take the first
+		shuffle($candidates);
+		$worker = array_pop($candidates);
+
+		// fork the process
+		if($pid = $this->fork())
+		{
+			//$this->_logger->trace("spawned child #%d for worker %d",$pid,$worker->_spawn_id);
+			$children[$pid] = $worker->_spawn_id;
+			return;
+		}
+		else
+		{
+			$this->_worker = $worker;
+			$this->_parent = $parent;
+			$this->onFork(getmypid());
+			$code = $this->_executeWorker($worker);
+			$this->onTerminate($code);
+			exit($code);
+		}
+	}
+
+	/**
+	 * Sends all children a posix 0 signal, to check if they are alive. If not
+	 * they are removed from the children array
+	 */
+	private function _reapWorkers(&$children)
+	{
+		// remove dead child processes
+		foreach($children as $pid=>$workerId)
+		{
+			if(!posix_kill($pid, 0)) unset($children[$pid]);
+		}
+	}
+
+	/**
+	 * Executes a worker
+	 */
+	private function _executeWorker($worker)
+	{
 		// use a custom error handler, chain to the existing loggers
-		$errorHandler = $this->_worker->getErrorHandler();
+		$errorHandler = $worker->getErrorHandler();
 		$errorHandler->logger()->addLoggers(
 			Ergo::application()->errorHandler()->logger()
 			);
 
 		Ergo::application()->setErrorHandler($errorHandler);
-		return $this->_worker->execute();
-	}
-
-	/**
-	 * Checks whether another worker should be spawned
-	 */
-	private function _spawnMoreWorkers($worker)
-	{
-		return count($worker->_spawn_processes) < $worker->_spawn_config['processes'];
+		return $worker->execute();
 	}
 
 	/**
@@ -94,62 +155,29 @@ class Sera_WorkerFarm extends Sera_Process
 		// enter spawn loop
 		while(!$this->_terminate || count($children))
 		{
-			foreach($this->_workers as $worker)
+			// if we haven't hit the process limit yet
+			if(!$this->_terminate && count($children) < $this->getProcessLimit())
 			{
-				$processCap = $this->_processLimit
-					? min($this->_processLimit, $this->_processMax)
-					: $this->_processMax
-					;
-
-				// fork a process if we can
-				if(!$this->_terminate
-					&& $this->_spawnMoreWorkers($worker)
-					&& count($children) < $processCap)
+				$this->_spawnWorker($children);
+			}
+			else
+			{
+				// patiently wait for a child to die
+				if(($pid = pcntl_wait($status)) > 0)
 				{
-					$pid = pcntl_fork();
-					if ($pid == -1)
-					{
-						throw new Sera_Exception('Failed to fork process');
-					}
-					else if($pid)
-					{
-						$children[$pid] = $pid;
-						$worker->_spawn_processes[$pid] = $pid;
-					}
-					else
-					{
-						$this->_parent = $parent;
-						$this->_worker = $worker;
-						$this->onFork(getmypid());
-						$code = $this->main();
-						$this->onTerminate($code);
-						exit($code);
-					}
-				}
-
-				// wait for a child to die
-				if($this->_terminate || count($children) >= $processCap)
-				{
-					// patiently wait for a child to die
-					pcntl_waitpid(0, $status);
-
 					// check the exit code
 					if(pcntl_wexitstatus($status) == self::SPAWN_TERMINATE)
 					{
 						$this->_terminate = true;
 					}
 
-					// remove dead child processes
-					foreach($worker->_spawn_processes as $child)
-					{
-						if(!posix_kill($child, 0))
-						{
-							unset($worker->_spawn_processes[$child]);
-							unset($children[$child]);
-						}
-					}
+					unset($children[$pid]);
 				}
-
+				else
+				{
+					// if wait fails, check each child
+					$this->_reapWorkers($children);
+				}
 			}
 		}
 
@@ -174,6 +202,11 @@ class Sera_WorkerFarm extends Sera_Process
 		{
 			if($this->getParentPid())
 			{
+				if($this->_terminate)
+				{
+					$this->_logger->trace("forcing worker termination");
+					exit(self::SPAWN_TERMINATE);
+				}
 				// terminate immediately if interuptable
 				if($this->_worker->isInteruptable())
 				{
