@@ -32,7 +32,9 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 
 		if(!is_null($queueName))
 		{
-			$this->listen($queueName);
+			$queueName = is_array($queueName) ? $queueName : array($queueName);
+
+			foreach($queueName as $name) $this->listen($name);
 		}
 	}
 
@@ -73,7 +75,7 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 			foreach($this->_listen as $listen) $this->_queue->listen($listen);
 		}
 
-		$this->logger->trace("waiting for tasks in child #%d (worker %d) [%s]...",
+		$this->logger->info("waiting for tasks in process #%d (worker %d) [%s]...",
 			getmypid(), $this->_spawn_id, implode(',', $this->_listen));
 
 		$this->_lastTask = $this->_queue->dequeue();

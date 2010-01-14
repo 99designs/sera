@@ -6,19 +6,28 @@
 class Sera_Parallel
 {
 	/**
-	 * Processes an array of things in parallel
+	 * Processes an iterator of things in parallel
 	 * @return void
 	 */
-	public static function map($callback, $array, $concurrency=1, $chunksize=1000)
+	public static function map($callback, $iterator, $concurrency=1, $chunksize=1000)
 	{
 		$children = array();
+		$iterator->rewind();
 
-		while(count($array))
+		while($iterator->valid())
 		{
-			while(count($array) && count($children) < $concurrency)
+			while(count($children) < $concurrency && $iterator->valid())
 			{
-				$chunk = array_slice($array, 0, $chunksize);
-				$array = array_slice($array, count($chunk));
+				$chunk = array();
+
+				// grab entries from the iterator
+				for($i=0; $i<$chunksize && $iterator->valid(); $i++)
+				{
+					$chunk[] = $iterator->current();
+					$iterator->next();
+				}
+
+				// fork and process
 				$pid = pcntl_fork();
 
 				if ($pid == -1)

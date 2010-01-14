@@ -152,6 +152,8 @@ class Sera_WorkerFarm extends Sera_Process
 		$parent = getmypid();
 		$this->onStart();
 
+		$this->_logger->info("spawning workers");
+
 		// enter spawn loop
 		while(!$this->_terminate || count($children))
 		{
