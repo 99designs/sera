@@ -14,6 +14,8 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	 */
 	public function select($queueName)
 	{
+		if (!isset($this->_queues[$queueName]))
+			$this->_queues[$queueName] = array();
 		$this->_selected = $queueName;
 		$this->listen($queueName);
 		return $this;
