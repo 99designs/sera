@@ -70,7 +70,8 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	 */
 	public function delete(Sera_Task $task)
 	{
-		if(($idx = array_search($task->toJson(),
+		if(isset($this->_queues[$this->_selected]) &&
+			($idx = array_search($task->toJson(),
 			$this->_queues[$this->_selected])) !== false)
 		{
 			unset($this->_selectedQueue[$idx]);
@@ -94,6 +95,23 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 		{
 			$task->execute();
 		}
+	}
+
+	/**
+	 * Checks whether the queue contains a particular task via
+	 * a callback that takes a task and returns true or false.
+	 */
+	public function contains($callback)
+	{
+		foreach($this->_queues as $name=>$queue)
+		{
+			foreach($queue as $task)
+			{
+				if(call_user_func($callback,$task)) return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
