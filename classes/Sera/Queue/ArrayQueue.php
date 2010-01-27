@@ -93,7 +93,6 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 		while ($task = $this->dequeue())
 		{
 			$task->execute();
-			$this->delete($task);
 		}
 	}
 
