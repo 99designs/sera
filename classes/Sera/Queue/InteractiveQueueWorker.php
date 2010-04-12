@@ -5,13 +5,28 @@
  */
 class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 {
+	private $_promptTasks=true;
+
 	const DELAY_TIME = 30;
+
+	/**
+	 * Sets whether to prompt the user for all tasks
+	 */
+	public function setPromptTasks($value)
+	{
+		$this->_promptTasks = $value;
+	}
 
 	/* (non-phpdoc)
 	 * @see Sera_Queue_QueueWorker::executeTask()
 	 */
 	protected function executeTask($task, $queue)
 	{
+		if(!$this->_promptTasks)
+		{
+			return parent::executeTask($task, $queue);
+		}
+
 		$logger = Ergo::loggerFor($this);
 		$meta = $this->_getTaskMetadata($queue, $task);
 
@@ -21,8 +36,8 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 			$this->_formatJsonForConsole(json_encode($meta))
 			);
 
-		// execute the action chosen
-		switch(strtolower($this->_readCommand($queue, $task)))
+		// execute the action chosen for the task
+		switch(strtolower($this->_readCommand($this->_getTaskOperations($queue, $task))))
 		{
 			case '':
 			case 'y':
@@ -54,13 +69,53 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 		}
 	}
 
-	/**
-	 * Reads a command from the user for a task from the console
+	/* (non-phpdoc)
+	 * @see Sera_Worker::handle($e)
 	 */
-	private function _readCommand($queue, $task)
+	public function handle($e)
 	{
-		$operations = $this->_getTaskOperations($queue, $task);
+		$logger = Ergo::loggerFor($this);
 
+		if($task = $this->getLastTask())
+		{
+			$prefix = "\033[31m";
+			$suffix = "\033[0m";
+
+			// print out the task
+			printf("\n%sExecute Failed: %s => %s in %s%s\n",
+				$prefix,
+				get_class($task),
+				$e->getMessage(),
+				$e->getFile(),
+				$suffix
+				);
+
+			$operations = array(
+				'r'=>'r = release [default]',
+				'd'=>'d = delete'
+				);
+
+			// execute the action chosen for the task
+			switch(strtolower($this->_readCommand($operations)))
+			{
+				case '':
+				case 'r':
+					parent::handle($e);
+					break;
+
+				case 'd':
+					$logger->info("deleting task %s", get_class($task));
+					$this->getQueue()->delete($task);
+					break;
+			}
+		}
+	}
+
+	/**
+	 * Reads a command from the user
+	 */
+	private function _readCommand($operations)
+	{
 		while(true)
 		{
 			$prompt = 'Execute ('.implode(', ', $operations).')? ';

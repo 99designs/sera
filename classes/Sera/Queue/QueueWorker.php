@@ -94,7 +94,7 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	{
 		try
 		{
-			if($this->_lastTask)
+			if($this->getLastTask())
 			{
 				$this->logger()->error(
 					"worker terminated with an uncaught error, releasing task for %d seconds",
@@ -110,5 +110,21 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 		}
 
 		parent::handle($e);
+	}
+
+	/**
+	 * Returns the current queue
+	 */
+	protected function getQueue()
+	{
+		return $this->_queue;
+	}
+
+	/**
+	 * Returns the last task executed, or false if no tasks have been executed
+	 */
+	protected function getLastTask()
+	{
+		return $this->_lastTask;
 	}
 }
