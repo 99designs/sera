@@ -13,6 +13,10 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	private $_lastTask=false;
 	protected $logger;
 
+	// api for parameters set by the worker farm
+	public $_spawn_id=1;
+	public $_spawn_config=array();
+
 	/**
 	 * Constructor
 	 * @param $queue object either queue instance or an Ergo_Factory

@@ -92,7 +92,9 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 
 			$operations = array(
 				'r'=>'r = release [default]',
-				'd'=>'d = delete'
+				'b'=>'b = bury',
+				'd'=>'d = delete',
+				'q'=>'q = quit'
 				);
 
 			// execute the action chosen for the task
@@ -106,6 +108,15 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 				case 'd':
 					$logger->info("deleting task %s", get_class($task));
 					$this->getQueue()->delete($task);
+					break;
+
+				case 'b':
+					$logger->info("burying task %s", get_class($task));
+					$this->getQueue()->bury($task);
+					break;
+
+				case 'q':
+					exit(Sera_WorkerFarm::SPAWN_TERMINATE);
 					break;
 			}
 		}
