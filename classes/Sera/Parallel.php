@@ -23,7 +23,7 @@ class Sera_Parallel
 				// grab entries from the iterator
 				for($i=0; $i<$chunksize && $iterator->valid(); $i++)
 				{
-					$chunk[] = $iterator->current();
+					$chunk[$iterator->key()] = $iterator->current();
 					$iterator->next();
 				}
 
@@ -42,7 +42,7 @@ class Sera_Parallel
 				// child process
 				else
 				{
-					foreach($chunk as $item) call_user_func($callback, $item);
+					foreach($chunk as $idx=>$item) call_user_func($callback, $item, $idx);
 					exit(0);
 				}
 			}
