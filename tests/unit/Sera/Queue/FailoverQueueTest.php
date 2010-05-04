@@ -56,10 +56,7 @@ class Sera_Queue_FailoverQueueTest extends UnitTestCase
 
 		$exception = new Sera_Queue_QueueException();
 
-		if (method_exists($badQueue, 'throwException'))
-			$badQueue->throwException('enqueue', $exception);
-		else
-			$badQueue->throwOn('enqueue', $exception);
+		$badQueue->throwOn('enqueue', $exception);
 
 		$badQueue->expectAtLeastOnce('select');
 		$badQueue->expectOnce('enqueue');
