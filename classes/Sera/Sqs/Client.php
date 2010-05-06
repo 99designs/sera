@@ -12,6 +12,7 @@
 class Sera_Sqs_Client
 {
 	const ENDPOINT = 'http://queue.amazonaws.com';
+	const RETRY = 5;
 
 	public $queueName;
 	private $accessKey;
@@ -252,8 +253,8 @@ class Sera_Sqs_Client
 			}
 			else if($retryCount > 0 && $response->code == 200)
 			{
-				$retryCount = 0;
 				//printf("retry for %s succeeded\n",$action);
+				$retry = false;
 			}
 		}
 		while($retry);
