@@ -32,7 +32,11 @@ class Sera_Queue_RelayQueueWorker extends Sera_AbstractWorker
 		$this->logger->info("waiting for tasks in relay process #%d [%s]...",
 			getmypid(),$this->_queueName);
 
-		$task = $this->_source->dequeue();
+		if(!($task = $this->_source->dequeue()))
+		{
+			$this->logger->trace("dequeue timed out whilst relaying");
+			return self::WORKER_FAILURE;
+		}
 
 		$this->setInteruptable(false);
 		$this->logger->trace("relaying task %s to %s",get_class($task),$this->_queueName);
