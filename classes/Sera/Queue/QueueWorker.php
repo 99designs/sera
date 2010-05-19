@@ -82,7 +82,11 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 		$this->logger->info("waiting for tasks in process #%d (worker %d) [%s]...",
 			getmypid(), $this->_spawn_id, implode(',', $this->_listen));
 
-		$this->_lastTask = $this->_queue->dequeue();
+		if(!$this->_lastTask = $this->_queue->dequeue())
+		{
+			$this->logger->trace("dequeue timed out (worker %d)", $this->_spawn_id);
+			return self::WORKER_FAILURE;
+		}
 
 		$this->setInteruptable(false);
 		$this->executeTask($this->_lastTask, $this->_queue);

@@ -33,7 +33,7 @@ interface Sera_Queue
 
 	/**
 	 * Gets a task from the queue.
-	 * @return Sera_Task
+	 * @return Sera_Task or false on timeout
 	 */
 	public function dequeue($timeout=false);
 

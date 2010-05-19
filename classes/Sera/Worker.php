@@ -8,6 +8,7 @@
 interface Sera_Worker
 {
 	const WORKER_SUCCESS=0;
+	const WORKER_FAILURE=1;
 	const WORKER_TERMINATE=10;
 
 	/**

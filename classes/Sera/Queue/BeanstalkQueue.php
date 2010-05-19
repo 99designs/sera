@@ -68,10 +68,16 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	public function dequeue($timeout=null)
 	{
 		// TODO: implement the timeout
-		$job = $this->_beanstalk->reserve();
-		$task = Sera_Task_Builder::fromJson($job->getData());
-		$task->beanstalkJob = $job;
-		return $task;
+		if($job = $this->_beanstalk->reserve())
+		{
+			$task = Sera_Task_Builder::fromJson($job->getData());
+			$task->beanstalkJob = $job;
+			return $task;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/* (non-phpdoc)
