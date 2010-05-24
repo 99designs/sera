@@ -140,5 +140,18 @@ abstract class Sera_Task_Abstract implements Sera_Task
 
 		return $task;
 	}
+
+	// ----------------------------------------------------
+	// magic php methods
+
+	public function __get($key)
+	{
+		return $this->_data[$key];
+	}
+
+	public function __isset($key)
+	{
+		return isset($this->_data[$key]);
+	}
 }
 
