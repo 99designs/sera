@@ -28,5 +28,10 @@ interface Sera_Worker
 	 * or terminated by the {@link Sera_WorkerFarm}
 	 */
 	public function isInteruptable();
+
+	/**
+	 * Requests that a worker terminate what it's doing
+	 */
+	public function terminate();
 }
 

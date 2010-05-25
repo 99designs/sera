@@ -6,6 +6,7 @@
 class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 {
 	private $_promptTasks=true;
+	private $_semaphore=false;
 
 	const DELAY_TIME = 30;
 
@@ -17,17 +18,32 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 		$this->_promptTasks = $value;
 	}
 
+	/**
+	 * Sets whether to use a semaphore to ensure only one runs at a time
+	 * @param Sera_Semaphore
+	 */
+	public function setSemaphore($semaphore)
+	{
+		$this->_semaphore = $semaphore;
+	}
+
 	/* (non-phpdoc)
 	 * @see Sera_Queue_QueueWorker::executeTask()
 	 */
 	protected function executeTask($task, $queue)
 	{
+		register_shutdown_function(array($this,'cleanup'));
+		$logger = Ergo::loggerFor($this);
+
+		// TODO: check if a previous process has "quit"
+		if($this->_semaphore)
+			$this->_semaphore->acquire();
+
 		if(!$this->_promptTasks)
 		{
 			return parent::executeTask($task, $queue);
 		}
 
-		$logger = Ergo::loggerFor($this);
 		$meta = $this->_getTaskMetadata($queue, $task);
 
 		// print out the task
@@ -189,5 +205,14 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 	private function _formatJsonForConsole($json)
 	{
 		return str_replace(array('"',',','{','}'), array('',', ','{ ',' }'), $json);
+	}
+
+	/**
+	 * Cleanup function triggered as a shutdown function
+	 */
+	public function cleanup()
+	{
+		if($this->_semaphore)
+			$this->_semaphore->release();
 	}
 }

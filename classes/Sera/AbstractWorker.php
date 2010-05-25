@@ -28,6 +28,14 @@ abstract class Sera_AbstractWorker
 	/* (non-phpdoc)
 	 * @see Sera_Worker
 	 */
+	public function terminate()
+	{
+		exit(Sera_WorkerFarm::SPAWN_TERMINATE);
+	}
+
+	/* (non-phpdoc)
+	 * @see Sera_Worker
+	 */
 	function getErrorHandler()
 	{
 		return $this;
