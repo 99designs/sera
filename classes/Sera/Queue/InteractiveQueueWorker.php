@@ -91,50 +91,47 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 	public function handle($e)
 	{
 		$logger = Ergo::loggerFor($this);
+		$task = $this->getLastTask();
+		$prefix = "\033[31m";
+		$suffix = "\033[0m";
 
-		if($task = $this->getLastTask())
+		// print out the task
+		printf("\n%sExecute Failed: %s => %s in %s%s\n",
+			$prefix,
+			get_class($task),
+			$e->getMessage(),
+			$e->getFile(),
+			$suffix
+			);
+
+		$operations = array(
+			'r'=>'r = release [default]',
+			'b'=>'b = bury',
+			'd'=>'d = delete',
+			'q'=>'q = quit'
+			);
+
+		// execute the action chosen for the task
+		switch(strtolower($this->_readCommand($operations)))
 		{
-			$prefix = "\033[31m";
-			$suffix = "\033[0m";
+			case '':
+			case 'r':
+				parent::handle($e);
+				break;
 
-			// print out the task
-			printf("\n%sExecute Failed: %s => %s in %s%s\n",
-				$prefix,
-				get_class($task),
-				$e->getMessage(),
-				$e->getFile(),
-				$suffix
-				);
+			case 'd':
+				$logger->info("deleting task %s", get_class($task));
+				$this->getQueue()->delete($task);
+				break;
 
-			$operations = array(
-				'r'=>'r = release [default]',
-				'b'=>'b = bury',
-				'd'=>'d = delete',
-				'q'=>'q = quit'
-				);
+			case 'b':
+				$logger->info("burying task %s", get_class($task));
+				$this->getQueue()->bury($task);
+				break;
 
-			// execute the action chosen for the task
-			switch(strtolower($this->_readCommand($operations)))
-			{
-				case '':
-				case 'r':
-					parent::handle($e);
-					break;
-
-				case 'd':
-					$logger->info("deleting task %s", get_class($task));
-					$this->getQueue()->delete($task);
-					break;
-
-				case 'b':
-					$logger->info("burying task %s", get_class($task));
-					$this->getQueue()->bury($task);
-					break;
-
-				case 'q':
-					exit(Sera_WorkerFarm::SPAWN_TERMINATE);
-					break;
-			}
+			case 'q':
+				exit(Sera_WorkerFarm::SPAWN_TERMINATE);
+				break;
 		}
 	}
 

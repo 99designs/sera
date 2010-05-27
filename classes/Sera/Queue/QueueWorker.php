@@ -133,6 +133,11 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	 */
 	protected function getLastTask()
 	{
+		if(!$this->_lastTask)
+		{
+			throw new Sera_Exception("The queue worker has no last task");
+		}
+
 		return $this->_lastTask;
 	}
 }

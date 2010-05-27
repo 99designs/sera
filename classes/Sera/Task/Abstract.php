@@ -121,7 +121,14 @@ abstract class Sera_Task_Abstract implements Sera_Task
 		if (!class_exists($class))
 			throw new Sera_Task_TaskException("Task class '$class' does not exist");
 
-		$task = new $class($data, true);
+		try
+		{
+			$task = new $class($data, true);
+		}
+		catch(Exception $e)
+		{
+			return Sera_Task_Unthawed::create($e, $data);
+		}
 
 		// add the optional signature component
 		if(isset($components[3]))
