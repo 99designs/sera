@@ -44,7 +44,7 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	 */
 	public function enqueue(Sera_Task $task)
 	{
-		$this->_queues[$this->_selected][] = $task;
+		$this->_queues[$this->_selected][] = $task->toJson();
 		return $this;
 	}
 
@@ -58,7 +58,9 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 			if (isset($this->_queues[$queueName]) &&
 				count($this->_queues[$queueName]) != 0)
 			{
-				return array_shift($this->_queues[$queueName]);
+				return Sera_Task_Builder::fromJson(
+					array_shift($this->_queues[$queueName])
+				);
 			}
 		}
 
