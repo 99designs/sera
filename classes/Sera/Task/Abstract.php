@@ -6,9 +6,6 @@
  */
 abstract class Sera_Task_Abstract implements Sera_Task
 {
-	const EVENT_CREATE='Create';
-	const EVENT_THAW='Thaw';
-
 	protected $_data;
 	protected $_signature=false;
 	protected $_observers = array();
@@ -16,36 +13,10 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	/**
 	 * Called by self::fromJson() or a static constructor in the concrete class.
 	 */
-	protected function __construct($data, $thaw = false)
+	protected function __construct($data)
 	{
 		$this->_data = $data;
-		$this->notifyObservers($thaw ? self::EVENT_THAW : self::EVENT_CREATE);
 	}
-
-	/**
-	 * Attach an observer that responds to notify
-	 */
-	public function attachObserver($observer)
-	{
-		$this->_observers []= $observer;
-	}
-
-	/**
-	 * Notify all attached observers with an event
-	 */
-	public function notifyObservers($event)
-	{
-		foreach ($this->_observers as $observer)
-			$observer->notify($event);
-
-		$callback = array($this, 'on'.$event);
-		if (is_callable($callback))
-			call_user_func($callback);
-	}
-
-	// template methods invoked on events
-	protected function onCreate() {}
-	protected function onThaw() {}
 
 	/**
 	 * Returns the version of the task
