@@ -15,6 +15,7 @@ class Sera_WorkerFarm extends Sera_Process
 	private $_logger;
 	private $_workers=array();
 	private $_worker;
+	private $_children=array();
 
 	/**
 	 * Constructor
@@ -150,35 +151,35 @@ class Sera_WorkerFarm extends Sera_Process
 
 		$this->catchSignals();
 
-		$children = array();
+		$this->_children = array();
 		$parent = getmypid();
 		$this->onStart();
 
 		$this->_logger->info("spawning workers");
 
 		// enter spawn loop
-		while(!$this->_terminate || count($children))
+		while(!$this->_terminate || count($this->_children))
 		{
 			// needed for PHP 5.3
 			if(function_exists('pcntl_signal_dispatch'))
 				pcntl_signal_dispatch();
 
 			// if we haven't hit the process limit yet
-			if(!$this->_terminate && count($children) < $this->getProcessLimit())
+			if(!$this->_terminate && count($this->_children) < $this->getProcessLimit())
 			{
-				$this->_spawnWorker($children);
+				$this->_spawnWorker($this->_children);
 			}
 			else
 			{
 				// patiently wait for a child to die
 				if(($pid = pcntl_wait($status, WUNTRACED)) > 0)
 				{
-					unset($children[$pid]);
+					unset($this->_children[$pid]);
 
 					// check the exit code
 					if(pcntl_wexitstatus($status) == self::SPAWN_TERMINATE && !$this->_terminate)
 					{
-						foreach(array_keys($children) as $pid)
+						foreach(array_keys($this->_children) as $pid)
 							posix_kill($pid, SIGINT);
 
 						$this->_terminate = true;
@@ -187,11 +188,12 @@ class Sera_WorkerFarm extends Sera_Process
 				else
 				{
 					// if wait fails, check each child
-					$this->_reapWorkers($children);
+					$this->_reapWorkers($this->_children);
 				}
 			}
 		}
 
+		$this->_logger->trace("workers are finished, terminating");
 		$this->onTerminate(0);
 	}
 
@@ -214,19 +216,11 @@ class Sera_WorkerFarm extends Sera_Process
 			// if we are a child process, terminate the worker
 			if($this->getParentPid())
 			{
-				// force a terminate on a double signal
-				if($this->_terminate)
-				{
-					$this->_logger->info("forcefully terminating process #%d", getmypid());
-					$this->_worker->terminate();
-				}
-				// terminate immediately if interuptable
 				if($this->_worker->isInteruptable())
 				{
 					$this->onTerminate(self::SPAWN_TERMINATE);
 					$this->_worker->terminate();
 				}
-				// otherwise wait for the work to finish
 				else
 				{
 					$this->_logger->trace("waiting for work to finish in process #%d", getmypid());
@@ -239,8 +233,20 @@ class Sera_WorkerFarm extends Sera_Process
 				{
 					$this->_logger->info("gracefully terminating workers, press ctrl-c to kill");
 					$this->_terminate = true;
+					$this->_shutdown();
+				}
+				else
+				{
+					$this->_logger->info("forcefully killing workers");
+					$this->_shutdown(true);
 				}
 			}
 		}
+	}
+
+	private function _shutdown($force=false)
+	{
+		foreach($this->_children as $pid=>$id)
+			posix_kill($pid, $force ? SIGKILL : SIGINT);
 	}
 }
