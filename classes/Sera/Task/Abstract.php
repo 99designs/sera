@@ -6,6 +6,8 @@
  */
 abstract class Sera_Task_Abstract implements Sera_Task
 {
+	const DEFAULT_TIMETORELEASE = 120; // 2 minutes
+
 	protected $_data;
 	protected $_signature=false;
 	protected $_observers = array();
@@ -40,7 +42,7 @@ abstract class Sera_Task_Abstract implements Sera_Task
 	 */
 	public function getTimeToRelease()
 	{
-		return 30; // 30 seconds
+		return self::DEFAULT_TIMETORELEASE;
 	}
 
 	/**
