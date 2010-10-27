@@ -19,7 +19,7 @@ interface Sera_Worker
 
 	/**
 	 * Gets the error handler for uncaught exceptions in the worker
-	 * @return Ergo_ErrorHandler
+	 * @return \Ergo\ErrorHandler
 	 */
 	public function getErrorHandler();
 

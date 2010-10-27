@@ -5,7 +5,7 @@
  *
  * @author Lachlan Donald <lachlan@99designs.com>
  */
-class Sera_Logging_SerializedLogger extends Ergo_Logging_ConsoleLogger
+class Sera_Logging_SerializedLogger extends \Ergo\Logging\ConsoleLogger
 {
 	private $_semaphore;
 
@@ -15,9 +15,9 @@ class Sera_Logging_SerializedLogger extends Ergo_Logging_ConsoleLogger
 	}
 
 	/* (non-phpdoc)
-	 * @see Ergo_Logger::log()
+	 * @see \Ergo\Logger::log()
 	 */
-	public function log($message,$level=Ergo_Logger::INFO)
+	public function log($message,$level=\Ergo\Logger::INFO)
 	{
 		if(!$this->_semaphore || ($this->_semaphore && $this->_semaphore->isAcquired()))
 		{

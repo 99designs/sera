@@ -3,7 +3,7 @@
 /**
  * An error handler for a {@link Sera_Worker}
  */
-class Sera_WorkerErrorHandler extends Ergo_Error_ConsoleErrorHandler
+class Sera_WorkerErrorHandler extends \Ergo\Error\ConsoleErrorHandler
 {
 	const RELEASE_DELAY=10; // 10 seconds
 
@@ -19,7 +19,7 @@ class Sera_WorkerErrorHandler extends Ergo_Error_ConsoleErrorHandler
 	}
 
 	/* (non-phpdoc)
-	 * @see Ergo_Error_ErrorHandler::handle()
+	 * @see \Ergo\Error\ErrorHandler::handle()
 	 */
 	public function handle($e)
 	{
