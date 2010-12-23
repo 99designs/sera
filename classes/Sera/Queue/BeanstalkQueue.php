@@ -139,7 +139,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 
 		$stats = $this->_beanstalk->statsJob($task->beanstalkJob->getId());
 		return array_filter(array(
-			'id'=>$stats['id'],
+			'id'=>$task->beanstalkJob->getId(),
 			'priority'=>$stats['pri'],
 			'age'=>$stats['age'],
 			'kicks'=>$stats['kicks'],
