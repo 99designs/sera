@@ -4,7 +4,7 @@
  * An abstract implementation of a worker
  */
 abstract class Sera_AbstractWorker
-	implements Sera_Worker, Ergo_Error_ErrorHandler
+	implements Sera_Worker, \Ergo\Error\ErrorHandler
 {
 	private $_interuptable=true;
 	private $_errorHandler;
@@ -16,7 +16,7 @@ abstract class Sera_AbstractWorker
 	{
 		if(!isset($this->_errorHandler))
 		{
-			$this->_errorHandler = new Ergo_Error_ConsoleErrorHandler(false);
+			$this->_errorHandler = new \Ergo\Error\ConsoleErrorHandler(false);
 		}
 
 		return $this->_errorHandler;
@@ -61,7 +61,7 @@ abstract class Sera_AbstractWorker
 	// error handler methods
 
 	/* (non-phpdoc)
-	 * @see Ergo_Error_ErrorHandler
+	 * @see \Ergo\Error\ErrorHandler
 	 */
 	public function handle($e)
 	{
@@ -69,7 +69,7 @@ abstract class Sera_AbstractWorker
 	}
 
 	/* (non-phpdoc)
-	 * @see Ergo_Error_ErrorHandler
+	 * @see \Ergo\Error\ErrorHandler
 	 */
 	public function logger()
 	{
@@ -77,7 +77,7 @@ abstract class Sera_AbstractWorker
 	}
 
 	/* (non-phpdoc)
-	 * @see Ergo_Error_ErrorHandler
+	 * @see \Ergo\Error\ErrorHandler
 	 */
 	public function context()
 	{
