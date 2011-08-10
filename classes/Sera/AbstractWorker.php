@@ -75,13 +75,5 @@ abstract class Sera_AbstractWorker
 	{
 		return $this->delegateErrorHandler()->logger();
 	}
-
-	/* (non-phpdoc)
-	 * @see \Ergo\Error\ErrorHandler
-	 */
-	public function context()
-	{
-		return $this->delegateErrorHandler()->context();
-	}
 }
 
