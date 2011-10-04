@@ -5,9 +5,9 @@
  */
 class Sera_Queue_ArrayQueue implements Sera_Queue
 {
-	private $_selected;
-	private $_listening=array();
-	private $_queues=array();
+	protected $_selected;
+	protected $_listening=array();
+	protected $_queues=array();
 
 	/* (non-phpdoc)
 	 * @see Queue::select
