@@ -117,6 +117,23 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	}
 
 	/**
+	 * Copy tasks in this queue to another queue
+	 */
+	public function copyTo($destQueue)
+	{
+		foreach($this->_queues as $name => $queue)
+		{
+			$destQueue->select($name);
+
+			foreach($queue as $task)
+			{
+				$task = Sera_Task_Builder::fromJson($task);
+				$destQueue->enqueue($task);
+			}
+		}
+	}
+
+	/**
 	 * Reset all internal queues.
 	 * @chainable
 	 */
