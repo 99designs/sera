@@ -5,13 +5,14 @@
  */
 class Sera_Queue_BeanstalkQueue implements Sera_Queue
 {
-	private $_beanstalk;
+	private $_beanstalk, $_server;
 
 	/**
 	 * Constructor
 	 */
 	public function __construct($server)
 	{
+		$this->_server = $server[0];
 		list($host,$port) = explode(':', $server[0]);
 
 		$this->_beanstalk = new Sera_Queue_PheanstalkDecorator(
@@ -147,5 +148,29 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 			'releases'=>$stats['releases'],
 			'timeouts'=>$stats['timeouts'],
 			));
+	}
+
+	/**
+	 * A beanstalk specific way of getting tube stats
+	 */
+	public function stats($queue)
+	{
+		$stats = $this->_beanstalk->statsTube($queue);
+		return array(
+			'tube'=>$stats['name'],
+			'urgent'=>$stats['current-jobs-urgent'],
+			'ready'=>$stats['current-jobs-ready'],
+			'reserved'=>$stats['current-jobs-reserved'],
+			'delayed'=>$stats['current-jobs-delayed'],
+			'buried'=>$stats['current-jobs-buried'],
+			);
+	}
+
+	/**
+	 * Returns the hostname:port of the queue
+	 */
+	public function server()
+	{
+		return $this->_server;
 	}
 }
