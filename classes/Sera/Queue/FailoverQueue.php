@@ -9,6 +9,7 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	private $_delegates;
 	private $_selected;
 	private $_listening=array();
+	private $_failoverCallback;
 
 	/**
 	 * @param Sera_Queue[] an array of queues to delegate failures to
@@ -16,6 +17,15 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	public function __construct($delegates)
 	{
 		$this->_delegates = $delegates;
+	}
+
+	/**
+	 * @param callback - A callback to invoke whenever failover occurs
+	 * The callback will be passed the exception that caused the failover
+	 */
+	public function onFailover($callback)
+	{
+		$this->_failoverCallback = $callback;
 	}
 
 	/* (non-phpdoc)
@@ -130,6 +140,9 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 			}
 			catch (Sera_Queue_QueueException $e)
 			{
+				if (isset($this->_failoverCallback))
+					call_user_func($this->_failoverCallback, $e);
+
 				// don't try this delegate queue again
 				array_shift($this->_delegates);
 				continue;

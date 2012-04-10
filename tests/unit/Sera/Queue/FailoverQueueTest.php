@@ -81,5 +81,39 @@ class Sera_Queue_FailoverQueueTest extends UnitTestCase
 		$task = $failoverQueue->dequeue();
 	}
 
+	public function testOnFailoverReceivesExceptionFromFailingQueue()
+	{
+		$badQueue = new MockQueue();
 
+		$exception = new Sera_Queue_QueueException();
+
+		$badQueue->throwOn('enqueue', $exception);
+
+		$badQueue->expectAtLeastOnce('select');
+		$badQueue->expectOnce('enqueue');
+		$badQueue->expectNever('dequeue');
+
+		$goodQueue = new MockQueue();
+		$goodQueue->expectAtLeastOnce('select');
+		$goodQueue->expectOnce('enqueue');
+
+
+		$failoverQueue = new Sera_Queue_FailoverQueue(
+			array(
+				$badQueue,
+				$goodQueue
+			)
+		);
+		$test = $this;
+		$failoverQueue->onFailover(function($e) use ($test) {
+			$test->exception = $e;
+		});
+
+		$task = Sera_Task_Null::create();
+
+		$failoverQueue->select('test');
+		$failoverQueue->enqueue($task);
+
+		$this->assertReference($this->exception, $exception);
+	}
 }
