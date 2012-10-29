@@ -153,9 +153,9 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/**
 	 * A beanstalk specific way of getting tube stats
 	 */
-	public function stats($queue)
+	public function statsTube($tube)
 	{
-		$stats = $this->_beanstalk->statsTube($queue);
+		$stats = $this->_beanstalk->statsTube($tube);
 		return array(
 			'tube'=>$stats['name'],
 			'urgent'=>$stats['current-jobs-urgent'],
@@ -164,6 +164,18 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 			'delayed'=>$stats['current-jobs-delayed'],
 			'buried'=>$stats['current-jobs-buried'],
 			);
+	}
+
+	public function stats()
+	{
+		$stats = $this->_beanstalk->stats();
+		return array(
+			'urgent'=>$stats['current-jobs-urgent'],
+			'ready'=>$stats['current-jobs-ready'],
+			'reserved'=>$stats['current-jobs-reserved'],
+			'delayed'=>$stats['current-jobs-delayed'],
+			'buried'=>$stats['current-jobs-buried'],
+		);
 	}
 
 	/**
