@@ -88,7 +88,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	{
 		if(!isset($task->beanstalkJob))
 		{
-			throw new Commerce_Exception("Failed to find linked beanstalk job");
+			throw new Exception("Failed to find linked beanstalk job");
 		}
 
 		$this->_beanstalk->delete($task->beanstalkJob);
@@ -102,7 +102,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	{
 		if(!isset($task->beanstalkJob))
 		{
-			throw new Commerce_Exception("Failed to find linked beanstalk job");
+			throw new Exception("Failed to find linked beanstalk job");
 		}
 
 		$this->_beanstalk->release(
@@ -121,7 +121,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	{
 		if(!isset($task->beanstalkJob))
 		{
-			throw new Commerce_Exception("Failed to find linked beanstalk job");
+			throw new Exception("Failed to find linked beanstalk job");
 		}
 
 		$this->_beanstalk->bury($task->beanstalkJob);
@@ -135,7 +135,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	{
 		if(!isset($task->beanstalkJob))
 		{
-			throw new Commerce_Exception("Failed to find linked beanstalk job");
+			throw new Exception("Failed to find linked beanstalk job");
 		}
 
 		$stats = $this->_beanstalk->statsJob($task->beanstalkJob->getId());
