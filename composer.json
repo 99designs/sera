@@ -15,6 +15,9 @@
 		"mockery/mockery": ">=0.7.2",
 		"99designs/ergo": ">=2.1.0"
 	},
+	"suggest": {
+		"pda/pheanstalk": "Supports beanstalkd as a queue type"
+	},
 	"autoload": {
 		"psr-0": { "Sera": "classes" }
 	}
