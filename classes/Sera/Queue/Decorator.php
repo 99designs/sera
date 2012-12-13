@@ -42,7 +42,7 @@ class Sera_Queue_Decorator implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::enqueue
 	 */
-	public function enqueue(Sera_Task $task)
+	public function enqueue($task)
 	{
 		$this->_delegate->enqueue($task);
 		return $this;
@@ -59,7 +59,7 @@ class Sera_Queue_Decorator implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::delete
 	 */
-	public function delete(Sera_Task $task)
+	public function delete($task)
 	{
 		$this->_delegate->delete($task);
 		return $this;
@@ -68,7 +68,7 @@ class Sera_Queue_Decorator implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::release
 	 */
-	public function release(Sera_Task $task, $delay=false)
+	public function release($task, $delay=false)
 	{
 		$this->_delegate->release($task, $delay);
 		return $this;

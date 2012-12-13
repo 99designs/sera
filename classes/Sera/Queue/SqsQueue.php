@@ -56,7 +56,7 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Commerce_Queue::enqueue
 	 */
-	public function enqueue(Sera_Task $task)
+	public function enqueue($task)
 	{
 		$this->_selected->SendMessage(urlencode($task->toJson()));
 	}
@@ -109,7 +109,7 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Commerce_Queue::delete
 	 */
-	public function delete(Sera_Task $task)
+	public function delete($task)
 	{
 		$this->_listening[$task->queueName]->DeleteMessage($task->receiptHandle);
 		return $this;
@@ -118,7 +118,7 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Commerce_Queue::release
 	 */
-	public function release(Sera_Task $task, $delay=false)
+	public function release($task, $delay=false)
 	{
 		// change the SQS release delay, this isn't exactly a delay..
 		$this->_listening[$task->queueName]->ChangeMessageVisibility(

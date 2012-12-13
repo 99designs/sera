@@ -42,7 +42,7 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::enqueue
 	 */
-	public function enqueue(Sera_Task $task)
+	public function enqueue($task)
 	{
 		$this->_queues[$this->_selected][] = $task->toJson();
 		return $this;
@@ -70,7 +70,7 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::delete
 	 */
-	public function delete(Sera_Task $task)
+	public function delete($task)
 	{
 		if(isset($this->_queues[$this->_selected]) &&
 			($idx = array_search($task->toJson(),
@@ -83,7 +83,7 @@ class Sera_Queue_ArrayQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::release
 	 */
-	public function release(Sera_Task $task, $delay=false)
+	public function release($task, $delay=false)
 	{
 		$this->enqueue($task);
 	}

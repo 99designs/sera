@@ -59,7 +59,7 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::enqueue
 	 */
-	public function enqueue(Sera_Task $task)
+	public function enqueue($task)
 	{
 		$args = func_get_args();
 		return $this->_callDelegate(__FUNCTION__, $args);
@@ -77,7 +77,7 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::delete
 	 */
-	public function delete(Sera_Task $task)
+	public function delete($task)
 	{
 		$args = func_get_args();
 		return $this->_callDelegate(__FUNCTION__, $args);
@@ -86,7 +86,7 @@ class Sera_Queue_FailoverQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Sera_Queue::release
 	 */
-	public function release(Sera_Task $task, $delay=false)
+	public function release($task, $delay=false)
 	{
 		$args = func_get_args();
 		return $this->_callDelegate(__FUNCTION__, $args);

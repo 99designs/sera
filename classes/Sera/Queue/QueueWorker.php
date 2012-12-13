@@ -20,10 +20,11 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	/**
 	 * Constructor
 	 * @param $queue object either queue instance or an \Ergo\Factory
+	 * @param $logger a logger to write output to
 	 */
-	function __construct($queue, $queueName=null)
+	function __construct($queue, $queueName=null, $logger=null)
 	{
-		$this->logger = Ergo::loggerFor($this);
+		$this->logger = $logger ?: new Ergo\Logging\NullLogger();
 
 		if($queue instanceof \Ergo\Factory)
 		{

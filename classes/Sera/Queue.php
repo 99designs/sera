@@ -29,7 +29,7 @@ interface Sera_Queue
 	 * Puts a task onto the queue.
 	 * @chainable
 	 */
-	public function enqueue(Sera_Task $task);
+	public function enqueue($task);
 
 	/**
 	 * Gets a task from the queue.
@@ -41,12 +41,12 @@ interface Sera_Queue
 	 * Deletes a task from the queue.
 	 * @chainable
 	 */
-	public function delete(Sera_Task $task);
+	public function delete($task);
 
 	/**
 	 * Releases a task back into the queue.
 	 * @chainable
 	 */
-	public function release(Sera_Task $task, $delay=false);
+	public function release($task, $delay=false);
 }
 

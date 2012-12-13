@@ -1,15 +1,13 @@
 <?php
 
-Mock::generate('Sera_Task', 'MockTask');
-
-class Sera_Queue_ExecutingQueueTest extends UnitTestCase
+class Sera_Queue_ExecutingQueueTest extends PHPUnit_Framework_TestCase
 {
 	public function testMe()
 	{
 		$queue = new Sera_Queue_ExecutingQueue();
 
-		$task = new MockTask();
-		$task->expectOnce('execute');
+		$task = Mockery::mock();
+		$task->shouldReceive('execute')->once();
 
 		$queue
 			->select('test')

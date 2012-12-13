@@ -1,15 +1,14 @@
 <?php
 
-Mock::generate('Sera_Queue', 'MockQueue');
-
-class Sera_Queue_FailoverQueueTest extends UnitTestCase
+class Sera_Queue_FailoverQueueTest extends PHPUnit_Framework_TestCase
 {
 	public function testBasic()
 	{
-		$queue = new MockQueue();
-		$queue->expectAtLeastOnce('select');
-		$queue->expectOnce('enqueue');
-		$queue->expectOnce('dequeue');
+		$queue = Mockery::mock();
+		$queue->shouldReceive('select')->atLeast()->once();
+		$queue->shouldReceive('listen')->atLeast()->once();
+		$queue->shouldReceive('enqueue')->once();
+		$queue->shouldReceive('dequeue')->once();
 
 		$failoverQueue = new Sera_Queue_FailoverQueue(
 			array(
@@ -26,15 +25,17 @@ class Sera_Queue_FailoverQueueTest extends UnitTestCase
 
 	public function testWithGoodQueues()
 	{
-		$queue1 = new MockQueue();
-		$queue1->expectAtLeastOnce('select');
-		$queue1->expectOnce('enqueue');
-		$queue1->expectOnce('dequeue');
+		$queue1 = Mockery::mock();
+		$queue1->shouldReceive('select')->atLeast()->once();
+		$queue1->shouldReceive('listen')->atLeast()->once();
+		$queue1->shouldReceive('enqueue')->once();
+		$queue1->shouldReceive('dequeue')->once();
 
-		$queue2 = new MockQueue();
-		$queue2->expectNever('select');
-		$queue2->expectNever('enqueue');
-		$queue2->expectNever('dequeue');
+		$queue2 = Mockery::mock();
+		$queue2->shouldReceive('select')->never();
+		$queue2->shouldReceive('listen')->never();
+		$queue2->shouldReceive('enqueue')->never();
+		$queue2->shouldReceive('dequeue')->never();
 
 		$failoverQueue = new Sera_Queue_FailoverQueue(
 			array(
@@ -52,20 +53,20 @@ class Sera_Queue_FailoverQueueTest extends UnitTestCase
 
 	public function testWithBadQueues()
 	{
-		$badQueue = new MockQueue();
+		$badQueue = Mockery::mock();
 
 		$exception = new Sera_Queue_QueueException();
 
-		$badQueue->throwOn('enqueue', $exception);
+		$badQueue->shouldReceive('enqueue')->once()->andThrow($exception);
+		$badQueue->shouldReceive('listen')->atLeast()->once();
+		$badQueue->shouldReceive('select')->atLeast()->once();
+		$badQueue->shouldReceive('dequeue')->never();
 
-		$badQueue->expectAtLeastOnce('select');
-		$badQueue->expectOnce('enqueue');
-		$badQueue->expectNever('dequeue');
-
-		$goodQueue = new MockQueue();
-		$goodQueue->expectAtLeastOnce('select');
-		$goodQueue->expectOnce('enqueue');
-		$goodQueue->expectOnce('dequeue');
+		$goodQueue = Mockery::mock();
+		$goodQueue->shouldReceive('listen')->atLeast()->once();
+		$goodQueue->shouldReceive('select')->atLeast()->once();
+		$goodQueue->shouldReceive('enqueue')->once();
+		$goodQueue->shouldReceive('dequeue')->once();
 
 		$failoverQueue = new Sera_Queue_FailoverQueue(
 			array(
@@ -83,19 +84,19 @@ class Sera_Queue_FailoverQueueTest extends UnitTestCase
 
 	public function testOnFailoverReceivesExceptionFromFailingQueue()
 	{
-		$badQueue = new MockQueue();
+		$badQueue = Mockery::mock();
 
 		$exception = new Sera_Queue_QueueException();
 
-		$badQueue->throwOn('enqueue', $exception);
+		$badQueue->shouldReceive('enqueue')->once()->andThrow( $exception);
+		$badQueue->shouldReceive('select')->atLeast()->once();
+		$badQueue->shouldReceive('listen')->atLeast()->once();
+		$badQueue->shouldReceive('dequeue')->never();
 
-		$badQueue->expectAtLeastOnce('select');
-		$badQueue->expectOnce('enqueue');
-		$badQueue->expectNever('dequeue');
-
-		$goodQueue = new MockQueue();
-		$goodQueue->expectAtLeastOnce('select');
-		$goodQueue->expectOnce('enqueue');
+		$goodQueue = Mockery::mock();
+		$goodQueue->shouldReceive('select')->atLeast()->once();
+		$goodQueue->shouldReceive('listen')->atLeast()->once();
+		$goodQueue->shouldReceive('enqueue')->once();
 
 
 		$failoverQueue = new Sera_Queue_FailoverQueue(
@@ -114,6 +115,6 @@ class Sera_Queue_FailoverQueueTest extends UnitTestCase
 		$failoverQueue->select('test');
 		$failoverQueue->enqueue($task);
 
-		$this->assertReference($this->exception, $exception);
+		$this->assertSame($this->exception, $exception);
 	}
 }

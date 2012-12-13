@@ -1,24 +1,33 @@
 <?php
 
-Mock::generate('Sera_Queue', 'MockQueue');
-Mock::generate('Sera_Task', 'MockTask');
-
-class Sera_Queue_RoundRobinQueueTest extends UnitTestCase
+class Sera_Queue_RoundRobinQueueTest extends PHPUnit_Framework_TestCase
 {
 	public function testMe()
 	{
-		$queue1 = new MockQueue();
-		$queue2 = new MockQueue();
-		$queue3 = new MockQueue();
+		$queue1 = Mockery::mock();
+		$queue1
+			->shouldReceive('select')->atLeast()->once()
+			->shouldReceive('listen')->atLeast()->once();
+
+		$queue2 = Mockery::mock();
+		$queue2
+			->shouldReceive('select')->atLeast()->once()
+			->shouldReceive('listen')->atLeast()->once();
+
+		$queue3 = Mockery::mock();
+		$queue3
+			->shouldReceive('select')->atLeast()->once()
+			->shouldReceive('listen')->atLeast()->once();
+
 		$queue = new Sera_Queue_RoundRobinQueue(array($queue1, $queue2, $queue3));
 
-		$queue1->expectOnce('enqueue');
-		$queue2->expectOnce('enqueue');
-		$queue3->expectOnce('enqueue');
+		$queue1->shouldReceive('enqueue')->once();
+		$queue2->shouldReceive('enqueue')->once();
+		$queue3->shouldReceive('enqueue')->once();
 
 		$queue->select('test');
-		$queue->enqueue(new MockTask());
-		$queue->enqueue(new MockTask());
-		$queue->enqueue(new MockTask());
+		$queue->enqueue(Mockery::mock());
+		$queue->enqueue(Mockery::mock());
+		$queue->enqueue(Mockery::mock());
 	}
 }

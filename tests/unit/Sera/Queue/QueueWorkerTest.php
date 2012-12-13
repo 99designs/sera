@@ -1,22 +1,23 @@
 <?php
 
-Mock::generate('Sera_Queue', 'MockQueue');
-Mock::generate('Sera_Task', 'MockTask');
-
-class Sera_Task_QueueWorkerTest extends UnitTestCase
+class Sera_Task_QueueWorkerTest extends PHPUnit_Framework_TestCase
 {
 	public function setUp()
 	{
-		$this->queue = new MockQueue();
+		$this->queue = Mockery::mock(new Sera_Queue_ArrayQueue());
 		$this->worker = new Sera_Queue_QueueWorker($this->queue);
 	}
 
 	public function testExecuteTask()
 	{
-		$task = new MockTask();
-		$this->queue->expectOnce('dequeue');
-		$this->queue->setReturnValue('dequeue',$task);
+		$task = Sera_Task_Null::create();
 
-		$this->assertEqual($this->worker->execute(), Sera_Worker::WORKER_SUCCESS);
+		$this
+			->queue
+			->shouldReceive('dequeue')
+			->once()
+			->andReturn($task);
+
+		$this->assertEquals($this->worker->execute(), Sera_Worker::WORKER_SUCCESS);
 	}
 }

@@ -51,7 +51,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::enqueue
 	 */
-	public function enqueue(Sera_Task $task)
+	public function enqueue($task)
 	{
 		$this->_beanstalk->put(
 			$task->toJson(),
@@ -84,7 +84,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::delete
 	 */
-	public function delete(Sera_Task $task)
+	public function delete($task)
 	{
 		if(!isset($task->beanstalkJob))
 		{
@@ -98,7 +98,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/* (non-phpdoc)
 	 * @see Queue::release
 	 */
-	public function release(Sera_Task $task, $delay=false)
+	public function release($task, $delay=false)
 	{
 		if(!isset($task->beanstalkJob))
 		{
@@ -117,7 +117,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/**
 	 * A beanstalk specific way of moving a task to a buried queue for manual execution
 	 */
-	public function bury(Sera_Task $task)
+	public function bury($task)
 	{
 		if(!isset($task->beanstalkJob))
 		{
@@ -131,7 +131,7 @@ class Sera_Queue_BeanstalkQueue implements Sera_Queue
 	/**
 	 * A beanstalk specific way of getting task stats
 	 */
-	public function taskStats(Sera_Task $task)
+	public function taskStats($task)
 	{
 		if(!isset($task->beanstalkJob))
 		{

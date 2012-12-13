@@ -3,7 +3,7 @@
 /**
  * @author Lachlan Donald <lachlan@99designs.com>
  */
-class QueueTest extends UnitTestCase
+class QueueTest extends PHPUnit_Framework_TestCase
 {
 	public function testAddingToAQueue()
 	{
@@ -66,7 +66,7 @@ class QueueTest extends UnitTestCase
 	public function assertTaskData($task, $data)
 	{
 		$this->assertTrue(is_object($task));
-		$this->assertEqual($task->getData(), $data);
+		$this->assertEquals($task->getData(), $data);
 	}
 
 	public function assertQueueEmpty($queue)
