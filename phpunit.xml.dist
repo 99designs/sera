@@ -7,7 +7,7 @@
 
   <!-- Test suites to be run -->
   <testsuites>
-    <testsuite name="php-desk">
+    <testsuite name="sera">
       <directory suffix="Test.php">tests</directory>
     </testsuite>
   </testsuites>
