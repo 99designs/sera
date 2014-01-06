@@ -96,7 +96,7 @@ class Sera_WorkerFarm extends Sera_Process
 		// fork the process
 		if($pid = $this->fork())
 		{
-			//$this->_logger->trace("spawned child #%d for worker %d",$pid,$worker->_spawn_id);
+			//$this->_logger->debug(sprintf("spawned child #%d for worker %d",$pid,$worker->_spawn_id));
 			$children[$pid] = $worker->_spawn_id;
 			return;
 		}
@@ -193,7 +193,7 @@ class Sera_WorkerFarm extends Sera_Process
 			}
 		}
 
-		$this->_logger->trace("workers are finished, terminating");
+		$this->_logger->debug("workers are finished, terminating");
 		$this->onTerminate(0);
 	}
 
@@ -223,7 +223,7 @@ class Sera_WorkerFarm extends Sera_Process
 				}
 				else
 				{
-					$this->_logger->trace("waiting for work to finish in process #%d", getmypid());
+					$this->_logger->debug(sprintf("waiting for work to finish in process #%d", getmypid()));
 					$this->_terminate = true;
 				}
 			}

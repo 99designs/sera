@@ -36,7 +36,7 @@ class Sera_WorkerErrorHandler extends \Ergo\Error\ConsoleErrorHandler
 			}
 			catch(Exception $re)
 			{
-				$this->logger()->logException($re);
+				$this->logger()->error($re->getMessage(), array('exception' => $re));
 			}
 		}
 
