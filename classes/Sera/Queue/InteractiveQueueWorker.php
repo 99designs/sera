@@ -80,7 +80,7 @@ class Sera_Queue_InteractiveQueueWorker extends Sera_Queue_QueueWorker
 				break;
 
 			default:
-				$logger->warn("not implemented command");
+				$logger->warning("not implemented command");
 				break;
 		}
 	}

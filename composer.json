@@ -8,12 +8,12 @@
 		{ "name": "Richard Bone", "email": "richard.bone@99designs.com" }
 	],
 	"require": {
-		"php": ">=5.3"
+		"php": ">=5.3",
+		"99designs/ergo": "~2.6"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "3.7.*",
-		"mockery/mockery": ">=0.7.2",
-		"99designs/ergo": ">=2.1.0"
+		"mockery/mockery": ">=0.7.2"
 	},
 	"suggest": {
 		"pda/pheanstalk": "Supports beanstalkd as a queue type"

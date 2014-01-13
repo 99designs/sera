@@ -60,12 +60,12 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 	protected function executeTask($task, $queue)
 	{
 		$startTime = microtime(true);
-		$this->logger->info("processing task %s", get_class($task));
+		$this->logger->info(sprintf("processing task %s", get_class($task)));
 
 		$task->execute();
 		$queue->delete($task);
 
-		$this->logger->info("task executed in %0.2f seconds",microtime(true)-$startTime);
+		$this->logger->info(sprintf("task executed in %0.2f seconds",microtime(true)-$startTime));
 	}
 
 
@@ -80,12 +80,16 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 			foreach($this->_listen as $listen) $this->_queue->listen($listen);
 		}
 
-		$this->logger->info("waiting for tasks in process #%d (worker %d) [%s]...",
-			getmypid(), $this->_spawn_id, implode(',', $this->_listen));
+		$this->logger->info(sprintf(
+			"waiting for tasks in process #%d (worker %d) [%s]...",
+			getmypid(),
+			$this->_spawn_id,
+			implode(',', $this->_listen)
+		));
 
 		if(!$this->_lastTask = $this->_queue->dequeue())
 		{
-			$this->logger->trace("dequeue timed out (worker %d)", $this->_spawn_id);
+			$this->logger->debug(sprintf("dequeue timed out (worker %d)", $this->_spawn_id));
 			return self::WORKER_FAILURE;
 		}
 
@@ -115,7 +119,7 @@ class Sera_Queue_QueueWorker extends Sera_AbstractWorker
 		}
 		catch(Exception $re)
 		{
-			$this->logger()->logException($re);
+			$this->logger()->error($re->getMessage(), array('exception' => $re));
 		}
 
 		parent::handle($e);

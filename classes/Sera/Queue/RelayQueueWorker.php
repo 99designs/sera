@@ -34,12 +34,12 @@ class Sera_Queue_RelayQueueWorker extends Sera_AbstractWorker
 
 		if(!($task = $this->_source->dequeue()))
 		{
-			$this->logger->trace("dequeue timed out whilst relaying");
+			$this->logger->debug("dequeue timed out whilst relaying");
 			return self::WORKER_FAILURE;
 		}
 
 		$this->setInteruptable(false);
-		$this->logger->trace("relaying task %s to %s",get_class($task),$this->_queueName);
+		$this->logger->debug(sprintf("relaying task %s to %s",get_class($task),$this->_queueName));
 		$this->_destination->enqueue($task);
 		$this->_source->delete($task);
 		$this->setInteruptable(true);
