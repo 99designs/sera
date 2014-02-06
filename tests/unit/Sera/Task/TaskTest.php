@@ -16,7 +16,7 @@ class Sera_Task_TaskTest extends PHPUnit_Framework_TestCase
 
 	public function testClassMissing()
 	{
-		$this->setExpectedException('Sera_Task_TaskException');
 		$task = Sera_Task_Abstract::fromJson('["ThisClassDoesNotExistTask",1,{"a":"b"},false]');
+		$this->assertInstanceOf('Sera_Task_Unthawed', $task);
 	}
 }
