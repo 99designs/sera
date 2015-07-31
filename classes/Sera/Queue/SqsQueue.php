@@ -13,16 +13,18 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	private $_accessKey;
 	private $_secretKey;
 	private $_pollRate;
+    private $_endpoint;
 
 	/**
 	 * Constructor
 	 */
-	public function __construct($accessKey, $secretKey, $pollRate=1)
+	public function __construct($accessKey, $secretKey, $pollRate=1, $endpoint=null)
 	{
 		$this->_sqs = false;
 		$this->_accessKey = $accessKey;
 		$this->_secretKey = $secretKey;
 		$this->_pollRate = $pollRate;
+        $this->_endpoint = $endpoint;
 	}
 
 	/* (non-phpdoc)
@@ -30,7 +32,7 @@ class Sera_Queue_SqsQueue implements Sera_Queue
 	 */
 	public function select($queueName)
 	{
-		$this->_selected = new Sera_Sqs_Client($this->_accessKey, $this->_secretKey, $queueName);
+		$this->_selected = new Sera_Sqs_Client($this->_accessKey, $this->_secretKey, $queueName, $this->_endpoint);
 		$this->listen($queueName);
 		return $this;
 	}

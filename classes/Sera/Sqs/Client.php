@@ -27,13 +27,17 @@ class Sera_Sqs_Client
 	 * @param string $endpoint	http://queue.amazonaws.com
 	 * @param string $queueName	optional
 	 */
-	public function __construct($accessKey, $secretKey, $queueName = '', $endpoint = self::ENDPOINT)
+	public function __construct($accessKey, $secretKey, $queueName = '', $endpoint = null)
 	{
 		// Save properties
 		$this->queueName = $queueName;
 		$this->accessKey = $accessKey;
 		$this->secretKey = $secretKey;
-		$this->endpoint = $endpoint;
+        if ($endpoint) {
+            $this->endpoint = $endpoint;
+        } else {
+            $this->endpoint = self::ENDPOINT;
+        }
 
 		// Set queue name
 		$this->setActiveQueueURL($queueName == '' ?
